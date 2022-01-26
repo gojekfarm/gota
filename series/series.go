@@ -2,11 +2,10 @@ package series
 
 import (
 	"fmt"
+	"math"
 	"reflect"
 	"sort"
 	"strings"
-
-	"math"
 
 	"gonum.org/v1/gonum/stat"
 )
@@ -53,6 +52,10 @@ type Element interface {
 	Int() (int, error)
 	Float() float64
 	Bool() (bool, error)
+	StringList() []string
+	IntList() ([]int, error)
+	FloatList() []float64
+	BoolList() ([]bool, error)
 
 	// Information methods
 	IsNA() bool
@@ -65,11 +68,23 @@ type intElements []intElement
 func (e intElements) Len() int           { return len(e) }
 func (e intElements) Elem(i int) Element { return &e[i] }
 
+// intListElements is the concrete implementation of Elements for IntList elements.
+type intListElements []intListElement
+
+func (e intListElements) Len() int           { return len(e) }
+func (e intListElements) Elem(i int) Element { return &e[i] }
+
 // stringElements is the concrete implementation of Elements for String elements.
 type stringElements []stringElement
 
 func (e stringElements) Len() int           { return len(e) }
 func (e stringElements) Elem(i int) Element { return &e[i] }
+
+// stringListElements is the concrete implementation of Elements for IntList elements.
+type stringListElements []stringListElement
+
+func (e stringListElements) Len() int           { return len(e) }
+func (e stringListElements) Elem(i int) Element { return &e[i] }
 
 // floatElements is the concrete implementation of Elements for Float elements.
 type floatElements []floatElement
@@ -77,11 +92,23 @@ type floatElements []floatElement
 func (e floatElements) Len() int           { return len(e) }
 func (e floatElements) Elem(i int) Element { return &e[i] }
 
+// floatListElements is the concrete implementation of Elements for IntList elements.
+type floatListElements []floatListElement
+
+func (e floatListElements) Len() int           { return len(e) }
+func (e floatListElements) Elem(i int) Element { return &e[i] }
+
 // boolElements is the concrete implementation of Elements for Bool elements.
 type boolElements []boolElement
 
 func (e boolElements) Len() int           { return len(e) }
 func (e boolElements) Elem(i int) Element { return &e[i] }
+
+// boolListElements is the concrete implementation of Elements for IntList elements.
+type boolListElements []boolListElement
+
+func (e boolListElements) Len() int           { return len(e) }
+func (e boolListElements) Elem(i int) Element { return &e[i] }
 
 // ElementValue represents the value that can be used for marshaling or
 // unmarshaling Elements.
@@ -114,10 +141,14 @@ type Type string
 
 // Supported Series Types
 const (
-	String Type = "string"
-	Int    Type = "int"
-	Float  Type = "float"
-	Bool   Type = "bool"
+	String     Type = "string"
+	Int        Type = "int"
+	Float      Type = "float"
+	Bool       Type = "bool"
+	StringList Type = "string_list"
+	IntList    Type = "int_list"
+	FloatList  Type = "float_list"
+	BoolList   Type = "bool_list"
 )
 
 // Indexes represent the elements that can be used for selecting a subset of
@@ -148,6 +179,14 @@ func New(values interface{}, t Type, name string) Series {
 			ret.elements = make(floatElements, n)
 		case Bool:
 			ret.elements = make(boolElements, n)
+		case StringList:
+			ret.elements = make(stringListElements, n)
+		case IntList:
+			ret.elements = make(intListElements, n)
+		case FloatList:
+			ret.elements = make(floatListElements, n)
+		case BoolList:
+			ret.elements = make(boolListElements, n)
 		default:
 			panic(fmt.Sprintf("unknown type %v", t))
 		}
@@ -166,7 +205,19 @@ func New(values interface{}, t Type, name string) Series {
 		for i := 0; i < l; i++ {
 			ret.elements.Elem(i).Set(v[i])
 		}
+	case [][]string:
+		l := len(v)
+		preAlloc(l)
+		for i := 0; i < l; i++ {
+			ret.elements.Elem(i).Set(v[i])
+		}
 	case []float64:
+		l := len(v)
+		preAlloc(l)
+		for i := 0; i < l; i++ {
+			ret.elements.Elem(i).Set(v[i])
+		}
+	case [][]float64:
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
@@ -178,7 +229,19 @@ func New(values interface{}, t Type, name string) Series {
 		for i := 0; i < l; i++ {
 			ret.elements.Elem(i).Set(v[i])
 		}
+	case [][]int:
+		l := len(v)
+		preAlloc(l)
+		for i := 0; i < l; i++ {
+			ret.elements.Elem(i).Set(v[i])
+		}
 	case []bool:
+		l := len(v)
+		preAlloc(l)
+		for i := 0; i < l; i++ {
+			ret.elements.Elem(i).Set(v[i])
+		}
+	case [][]bool:
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
@@ -207,7 +270,6 @@ func New(values interface{}, t Type, name string) Series {
 			ret.elements.Elem(0).Set(val)
 		}
 	}
-
 	return ret
 }
 
@@ -229,6 +291,26 @@ func Floats(values interface{}) Series {
 // Bools is a constructor for a Bool Series
 func Bools(values interface{}) Series {
 	return New(values, Bool, "")
+}
+
+// StringsList is a constructor for an StringList Series
+func StringsList(values interface{}) Series {
+	return New(values, IntList, "")
+}
+
+// IntsList is a constructor for an IntList Series
+func IntsList(values interface{}) Series {
+	return New(values, IntList, "")
+}
+
+// FloatsList is a constructor for an FloatList Series
+func FloatsList(values interface{}) Series {
+	return New(values, FloatList, "")
+}
+
+// BoolsList is a constructor for an BoolList Series
+func BoolsList(values interface{}) Series {
+	return New(values, BoolList, "")
 }
 
 // Empty returns an empty Series of the same type
@@ -437,11 +519,35 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 		return Bools(bools)
 	}
 
-	// Single element comparison
-	if comp.Len() == 1 {
+	// Multiple element comparison of single value types
+	if s.Type() == String ||
+		s.Type() == Int ||
+		s.Type() == Float ||
+		s.Type() == Bool {
+		// Single element comparison
+		if comp.Len() == 1 {
+			for i := 0; i < s.Len(); i++ {
+				e := s.elements.Elem(i)
+				c, err := compareElements(e, comp.elements.Elem(0), comparator)
+				if err != nil {
+					s = s.Empty()
+					s.Err = err
+					return s
+				}
+				bools[i] = c
+			}
+			return Bools(bools)
+		}
+
+		// Multiple element comparison of single value types
+		if s.Len() != comp.Len() {
+			s := s.Empty()
+			s.Err = fmt.Errorf("can't compare: length mismatch")
+			return s
+		}
 		for i := 0; i < s.Len(); i++ {
 			e := s.elements.Elem(i)
-			c, err := compareElements(e, comp.elements.Elem(0), comparator)
+			c, err := compareElements(e, comp.elements.Elem(i), comparator)
 			if err != nil {
 				s = s.Empty()
 				s.Err = err
@@ -449,25 +555,23 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 			}
 			bools[i] = c
 		}
+	} else {
+		// Single element comparison
+		if comp.Len() == 1 {
+			for i := 0; i < s.Len(); i++ {
+				e := s.elements.Elem(i)
+				c, err := compareElements(e, comp.elements.Elem(0), comparator)
+				if err != nil {
+					s = s.Empty()
+					s.Err = err
+					return s
+				}
+				bools[i] = c
+			}
+		}
 		return Bools(bools)
 	}
 
-	// Multiple element comparison
-	if s.Len() != comp.Len() {
-		s := s.Empty()
-		s.Err = fmt.Errorf("can't compare: length mismatch")
-		return s
-	}
-	for i := 0; i < s.Len(); i++ {
-		e := s.elements.Elem(i)
-		c, err := compareElements(e, comp.elements.Elem(i), comparator)
-		if err != nil {
-			s = s.Empty()
-			s.Err = err
-			return s
-		}
-		bools[i] = c
-	}
 	return Bools(bools)
 }
 
@@ -490,6 +594,18 @@ func (s Series) Copy() Series {
 	case Int:
 		elements = make(intElements, s.Len())
 		copy(elements.(intElements), s.elements.(intElements))
+	case StringList:
+		elements = make(stringListElements, s.Len())
+		copy(elements.(stringListElements), s.elements.(stringListElements))
+	case FloatList:
+		elements = make(floatListElements, s.Len())
+		copy(elements.(floatListElements), s.elements.(floatListElements))
+	case BoolList:
+		elements = make(boolListElements, s.Len())
+		copy(elements.(boolListElements), s.elements.(boolListElements))
+	case IntList:
+		elements = make(intListElements, s.Len())
+		copy(elements.(intListElements), s.elements.(intListElements))
 	}
 	ret := Series{
 		Name:     name,

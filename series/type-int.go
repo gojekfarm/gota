@@ -115,6 +115,40 @@ func (e intElement) Bool() (bool, error) {
 	return false, fmt.Errorf("can't convert Int \"%v\" to bool", e.e)
 }
 
+func (e intElement) StringList() []string {
+	if e.IsNA() {
+		return []string{"NaN"}
+	}
+	return []string{fmt.Sprint(e.e)}
+}
+
+func (e intElement) IntList() ([]int, error) {
+	if e.IsNA() {
+		return nil, fmt.Errorf("can't convert NaN to []int")
+	}
+	return []int{e.e}, fmt.Errorf("cant't convert int to []int")
+}
+
+func (e intElement) FloatList() []float64 {
+	if e.IsNA() {
+		return []float64{math.NaN()}
+	}
+	return []float64{float64(e.e)}
+}
+
+func (e intElement) BoolList() ([]bool, error) {
+	if e.IsNA() {
+		return nil, fmt.Errorf("can't convert NaN to []bool")
+	}
+	switch e.e {
+	case 1:
+		return []bool{true}, nil
+	case 0:
+		return []bool{false}, nil
+	}
+	return nil, fmt.Errorf("can't convert Int \"%v\" to []bool", e.e)
+}
+
 func (e intElement) Eq(elem Element) bool {
 	i, err := elem.Int()
 	if err != nil || e.IsNA() {
