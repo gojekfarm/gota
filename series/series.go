@@ -344,6 +344,14 @@ func (s *Series) Append(values interface{}) {
 		s.elements = append(s.elements.(floatElements), news.elements.(floatElements)...)
 	case Bool:
 		s.elements = append(s.elements.(boolElements), news.elements.(boolElements)...)
+	case StringList:
+		s.elements = append(s.elements.(stringListElements), news.elements.(stringListElements)...)
+	case IntList:
+		s.elements = append(s.elements.(intListElements), news.elements.(intListElements)...)
+	case FloatList:
+		s.elements = append(s.elements.(floatListElements), news.elements.(floatListElements)...)
+	case BoolList:
+		s.elements = append(s.elements.(boolListElements), news.elements.(boolListElements)...)
 	}
 }
 
@@ -399,6 +407,30 @@ func (s Series) Subset(indexes Indexes) Series {
 		elements := make(boolElements, len(idx))
 		for k, i := range idx {
 			elements[k] = s.elements.(boolElements)[i]
+		}
+		ret.elements = elements
+	case StringList:
+		elements := make(stringListElements, len(idx))
+		for k, i := range idx {
+			elements[k] = s.elements.(stringListElements)[i]
+		}
+		ret.elements = elements
+	case IntList:
+		elements := make(intListElements, len(idx))
+		for k, i := range idx {
+			elements[k] = s.elements.(intListElements)[i]
+		}
+		ret.elements = elements
+	case FloatList:
+		elements := make(floatListElements, len(idx))
+		for k, i := range idx {
+			elements[k] = s.elements.(floatListElements)[i]
+		}
+		ret.elements = elements
+	case BoolList:
+		elements := make(boolListElements, len(idx))
+		for k, i := range idx {
+			elements[k] = s.elements.(boolListElements)[i]
 		}
 		ret.elements = elements
 	default:
