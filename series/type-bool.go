@@ -41,6 +41,36 @@ func (e *boolElement) Set(value interface{}) {
 			e.nan = true
 			return
 		}
+	case int32:
+		switch val {
+		case 1:
+			e.e = true
+		case 0:
+			e.e = false
+		default:
+			e.nan = true
+			return
+		}
+	case int64:
+		switch val {
+		case 1:
+			e.e = true
+		case 0:
+			e.e = false
+		default:
+			e.nan = true
+			return
+		}
+	case float32:
+		switch val {
+		case 1:
+			e.e = true
+		case 0:
+			e.e = false
+		default:
+			e.nan = true
+			return
+		}
 	case float64:
 		switch val {
 		case 1:

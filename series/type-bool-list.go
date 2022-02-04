@@ -49,6 +49,48 @@ func (e *boolListElement) Set(value interface{}) {
 				return
 			}
 		}
+	case []int32:
+		l := len(val)
+		e.e = make([]bool, l)
+		for i := 0; i < l; i++ {
+			switch val[i] {
+			case 1:
+				e.e[i] = true
+			case 0:
+				e.e[i] = false
+			default:
+				e.nan = true
+				return
+			}
+		}
+	case []int64:
+		l := len(val)
+		e.e = make([]bool, l)
+		for i := 0; i < l; i++ {
+			switch val[i] {
+			case 1:
+				e.e[i] = true
+			case 0:
+				e.e[i] = false
+			default:
+				e.nan = true
+				return
+			}
+		}
+	case []float32:
+		l := len(val)
+		e.e = make([]bool, l)
+		for i := 0; i < l; i++ {
+			switch val[i] {
+			case 1:
+				e.e[i] = true
+			case 0:
+				e.e[i] = false
+			default:
+				e.nan = true
+				return
+			}
+		}
 	case []float64:
 		l := len(val)
 		e.e = make([]bool, l)

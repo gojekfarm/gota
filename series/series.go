@@ -200,10 +200,15 @@ func New(values interface{}, t Type, name string) Series {
 
 	switch v := values.(type) {
 	case []string:
-		l := len(v)
-		preAlloc(l)
-		for i := 0; i < l; i++ {
-			ret.elements.Elem(i).Set(v[i])
+		if strings.HasSuffix(string(t), "_list") {
+			preAlloc(1)
+			ret.elements.Elem(0).Set(v)
+		} else {
+			l := len(v)
+			preAlloc(l)
+			for i := 0; i < l; i++ {
+				ret.elements.Elem(i).Set(v[i])
+			}
 		}
 	case [][]string:
 		l := len(v)
@@ -295,7 +300,7 @@ func Bools(values interface{}) Series {
 
 // StringsList is a constructor for an StringList Series
 func StringsList(values interface{}) Series {
-	return New(values, IntList, "")
+	return New(values, StringList, "")
 }
 
 // IntsList is a constructor for an IntList Series
@@ -519,27 +524,24 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 		return Bools(bools)
 	}
 
-	// Multiple element comparison of single value types
-	if s.Type() == String ||
-		s.Type() == Int ||
-		s.Type() == Float ||
-		s.Type() == Bool {
-		// Single element comparison
-		if comp.Len() == 1 {
-			for i := 0; i < s.Len(); i++ {
-				e := s.elements.Elem(i)
-				c, err := compareElements(e, comp.elements.Elem(0), comparator)
-				if err != nil {
-					s = s.Empty()
-					s.Err = err
-					return s
-				}
-				bools[i] = c
+	// Single element comparison
+	if comp.Len() == 1 {
+		for i := 0; i < s.Len(); i++ {
+			e := s.elements.Elem(i)
+			c, err := compareElements(e, comp.elements.Elem(0), comparator)
+			if err != nil {
+				s = s.Empty()
+				s.Err = err
+				return s
 			}
-			return Bools(bools)
+			bools[i] = c
 		}
+		return Bools(bools)
+	}
 
-		// Multiple element comparison of single value types
+	// Multiple element comparison of single value types
+	switch s.t {
+	case String, Int, Float, Bool:
 		if s.Len() != comp.Len() {
 			s := s.Empty()
 			s.Err = fmt.Errorf("can't compare: length mismatch")
@@ -555,21 +557,17 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 			}
 			bools[i] = c
 		}
-	} else {
-		// Single element comparison
-		if comp.Len() == 1 {
-			for i := 0; i < s.Len(); i++ {
-				e := s.elements.Elem(i)
-				c, err := compareElements(e, comp.elements.Elem(0), comparator)
-				if err != nil {
-					s = s.Empty()
-					s.Err = err
-					return s
-				}
-				bools[i] = c
+	case StringList, IntList, FloatList, BoolList:
+		for i := 0; i < s.Len(); i++ {
+			e := s.elements.Elem(i)
+			c, err := compareElements(e, comp.elements.Elem(i), comparator)
+			if err != nil {
+				s = s.Empty()
+				s.Err = err
+				return s
 			}
+			bools[i] = c
 		}
-		return Bools(bools)
 	}
 
 	return Bools(bools)

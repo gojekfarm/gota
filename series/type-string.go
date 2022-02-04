@@ -26,8 +26,14 @@ func (e *stringElement) Set(value interface{}) {
 		}
 	case int:
 		e.e = strconv.Itoa(val)
+	case int32:
+		e.e = strconv.Itoa(int(val))
+	case int64:
+		e.e = strconv.FormatInt(val, 10)
+	case float32:
+		e.e = strconv.FormatFloat(float64(val), 'f', 6, 32)
 	case float64:
-		e.e = strconv.FormatFloat(value.(float64), 'f', 6, 64)
+		e.e = strconv.FormatFloat(val, 'f', 6, 64)
 	case bool:
 		b := value.(bool)
 		if b {

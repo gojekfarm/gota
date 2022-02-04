@@ -38,6 +38,24 @@ func (e *floatListElement) Set(value interface{}) {
 		for i := 0; i < l; i++ {
 			e.e[i] = float64(val[i])
 		}
+	case []int32:
+		l := len(val)
+		e.e = make([]float64, l)
+		for i := 0; i < l; i++ {
+			e.e[i] = float64(val[i])
+		}
+	case []int64:
+		l := len(val)
+		e.e = make([]float64, l)
+		for i := 0; i < l; i++ {
+			e.e[i] = float64(val[i])
+		}
+	case []float32:
+		l := len(val)
+		e.e = make([]float64, l)
+		for i := 0; i < l; i++ {
+			e.e[i] = float64(val[i])
+		}
 	case []float64:
 		l := len(val)
 		e.e = make([]float64, l)

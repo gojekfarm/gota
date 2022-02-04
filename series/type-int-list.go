@@ -38,6 +38,31 @@ func (e *intListElement) Set(value interface{}) {
 		for i := 0; i < l; i++ {
 			e.e[i] = int(val[i])
 		}
+	case []int32:
+		l := len(val)
+		e.e = make([]int, l)
+		for i := 0; i < l; i++ {
+			e.e[i] = int(val[i])
+		}
+	case []int64:
+		l := len(val)
+		e.e = make([]int, l)
+		for i := 0; i < l; i++ {
+			e.e[i] = int(val[i])
+		}
+	case []float32:
+		l := len(val)
+		e.e = make([]int, l)
+		for i := 0; i < l; i++ {
+			f := val[i]
+			if math.IsNaN(float64(f)) ||
+				math.IsInf(float64(f), 0) ||
+				math.IsInf(float64(f), 1) {
+				e.nan = true
+				return
+			}
+			e.e[i] = int(f)
+		}
 	case []float64:
 		l := len(val)
 		e.e = make([]int, l)

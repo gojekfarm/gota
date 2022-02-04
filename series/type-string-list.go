@@ -34,6 +34,24 @@ func (e *stringListElement) Set(value interface{}) {
 		for i := 0; i < l; i++ {
 			e.e[i] = strconv.Itoa(val[i])
 		}
+	case []int32:
+		l := len(val)
+		e.e = make([]string, l)
+		for i := 0; i < l; i++ {
+			e.e[i] = strconv.Itoa(int(val[i]))
+		}
+	case []int64:
+		l := len(val)
+		e.e = make([]string, l)
+		for i := 0; i < l; i++ {
+			e.e[i] = strconv.FormatInt(val[i], 10)
+		}
+	case []float32:
+		l := len(val)
+		e.e = make([]string, l)
+		for i := 0; i < l; i++ {
+			e.e[i] = strconv.FormatFloat(float64(val[i]), 'f', 6, 32)
+		}
 	case []float64:
 		l := len(val)
 		e.e = make([]string, l)

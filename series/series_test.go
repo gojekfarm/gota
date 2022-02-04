@@ -71,16 +71,28 @@ func TestSeries_Compare(t *testing.T) {
 			Bools([]bool{false, true, true, false, false, false}),
 		},
 		{
-			Ints([]int{0, 2, 1, 5, 9}),
+			StringsList([][]string{{"AA", "BB"}, {"CC", "DD"}, {"EEE", "FFF"}}),
 			Eq,
-			"2",
-			Bools([]bool{false, true, false, false, false}),
+			[]string{"CC", "DD"},
+			Bools([]bool{false, true, false}),
 		},
 		{
 			Ints([]int{0, 2, 1, 5, 9}),
 			Eq,
 			[]int{0, 2, 0, 5, 10},
 			Bools([]bool{true, true, false, true, false}),
+		},
+		{
+			IntsList([][]int{{0, 1}, {2, 3}, {1, 2}, {5, 6}, {9, 10}}),
+			Eq,
+			[][]int{{2, 3}},
+			Bools([]bool{false, true, false, false, false}),
+		},
+		{
+			IntsList([][]int{{0, 1}, {2, 3}, {1, 2}, {5, 6}, {9, 10}}),
+			Eq,
+			[][]int{{0, 0}, {2, 3}, {1, 2}, {6, 6}, {9, 9}},
+			Bools([]bool{false, true, true, false, false}),
 		},
 		{
 			Floats([]float64{0.1, 2, 1, 5, 9}),
@@ -105,6 +117,12 @@ func TestSeries_Compare(t *testing.T) {
 			Eq,
 			[]bool{true, false, false},
 			Bools([]bool{true, false, true}),
+		},
+		{
+			BoolsList([][]bool{{true, true}, {true, false}, {false, false}}),
+			Eq,
+			[][]bool{{false, false}},
+			Bools([]bool{false, false, true}),
 		},
 		{
 			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
@@ -1382,14 +1400,16 @@ func TestSeries_Median(t *testing.T) {
 			7,
 		},
 		{
-			Floats([]float64{20.2755, 4.98964, -20.2006, 1.19854, 1.89977,
+			Floats([]float64{
+				20.2755, 4.98964, -20.2006, 1.19854, 1.89977,
 				1.51178, -17.4687, 4.65567, -8.65952, 6.31649,
 			}),
 			1.705775,
 		},
 		{
 			// Change in order should not influence result.
-			Floats([]float64{4.98964, -20.2006, 1.89977, 1.19854,
+			Floats([]float64{
+				4.98964, -20.2006, 1.89977, 1.19854,
 				1.51178, -17.4687, -8.65952, 20.2755, 4.65567, 6.31649,
 			}),
 			1.705775,
@@ -1744,7 +1764,8 @@ func TestSeries_Sum(t *testing.T) {
 			11155,
 		},
 		{
-			Floats([]float64{20.2755, 4.98964, -20.2006, 1.19854, 1.89977,
+			Floats([]float64{
+				20.2755, 4.98964, -20.2006, 1.19854, 1.89977,
 				1.51178, -17.4687, 4.65567, -8.65952, 6.31649,
 			}),
 			-5.481429999999998,
