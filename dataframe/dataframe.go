@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"reflect"
 	"sort"
 	"strconv"
@@ -1784,7 +1783,7 @@ func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 			}
 		}
 	}
-	log.Println("newCols...", newCols)
+
 	return New(newCols...)
 }
 
