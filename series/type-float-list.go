@@ -17,7 +17,46 @@ var _ Element = (*floatListElement)(nil)
 func (e *floatListElement) Set(value interface{}) {
 	e.nan = false
 	switch val := value.(type) {
+	case string:
+		if val == "NaN" {
+			e.nan = true
+			return
+		}
+		f, err := strconv.ParseFloat(val, 64)
+		if err != nil {
+			e.nan = true
+			return
+		}
+		e.e = make([]float64, 1)
+		e.e[0] = f
+	case int:
+		e.e = make([]float64, 1)
+		e.e[0] = float64(val)
+	case int32:
+		e.e = make([]float64, 1)
+		e.e[0] = float64(val)
+	case int64:
+		e.e = make([]float64, 1)
+		e.e[0] = float64(val)
+	case float32:
+		e.e = make([]float64, 1)
+		e.e[0] = float64(val)
+	case float64:
+		e.e = make([]float64, 1)
+		e.e[0] = float64(val)
+	case bool:
+		e.e = make([]float64, 1)
+		b := val
+		if b {
+			e.e[0] = 1
+		} else {
+			e.e[0] = 0
+		}
 	case []string:
+		if val == nil {
+			e.nan = true
+			return
+		}
 		l := len(val)
 		e.e = make([]float64, l)
 		for i := 0; i < l; i++ {
@@ -33,36 +72,60 @@ func (e *floatListElement) Set(value interface{}) {
 			e.e[i] = f
 		}
 	case []int:
+		if val == nil {
+			e.nan = true
+			return
+		}
 		l := len(val)
 		e.e = make([]float64, l)
 		for i := 0; i < l; i++ {
 			e.e[i] = float64(val[i])
 		}
 	case []int32:
+		if val == nil {
+			e.nan = true
+			return
+		}
 		l := len(val)
 		e.e = make([]float64, l)
 		for i := 0; i < l; i++ {
 			e.e[i] = float64(val[i])
 		}
 	case []int64:
+		if val == nil {
+			e.nan = true
+			return
+		}
 		l := len(val)
 		e.e = make([]float64, l)
 		for i := 0; i < l; i++ {
 			e.e[i] = float64(val[i])
 		}
 	case []float32:
+		if val == nil {
+			e.nan = true
+			return
+		}
 		l := len(val)
 		e.e = make([]float64, l)
 		for i := 0; i < l; i++ {
 			e.e[i] = float64(val[i])
 		}
 	case []float64:
+		if val == nil {
+			e.nan = true
+			return
+		}
 		l := len(val)
 		e.e = make([]float64, l)
 		for i := 0; i < l; i++ {
 			e.e[i] = float64(val[i])
 		}
 	case []bool:
+		if val == nil {
+			e.nan = true
+			return
+		}
 		l := len(val)
 		e.e = make([]float64, l)
 		for i := 0; i < l; i++ {
@@ -93,7 +156,7 @@ func (e floatListElement) IsNA() bool {
 }
 
 func (e floatListElement) Type() Type {
-	return IntList
+	return FloatList
 }
 
 func (e floatListElement) Val() ElementValue {
@@ -105,20 +168,29 @@ func (e floatListElement) Val() ElementValue {
 
 func (e floatListElement) String() string {
 	if e.IsNA() {
-		return "NaN"
+		return "[NaN]"
 	}
-	return fmt.Sprint(e.e)
+	return fmt.Sprintf("%f", e.e)
 }
 
 func (e floatListElement) Int() (int, error) {
+	if e.IsNA() {
+		return 0, fmt.Errorf("can't convert NaN to int")
+	}
 	return 0, fmt.Errorf("can't convert []float64 to int")
 }
 
 func (e floatListElement) Float() float64 {
+	if e.IsNA() {
+		return math.NaN()
+	}
 	return 0
 }
 
 func (e floatListElement) Bool() (bool, error) {
+	if e.IsNA() {
+		return false, fmt.Errorf("can't convert NaN to bool")
+	}
 	return false, fmt.Errorf("can't convert []float64 to bool")
 }
 
@@ -199,24 +271,27 @@ func (e floatListElement) Neq(elem Element) bool {
 		return false
 	}
 
+	count := 0
 	for i := 0; i < len(e.e); i++ {
 		if e.e[i] == list[i] {
-			return false
+			count = count + 1
 		}
 	}
 
-	return true
+	return count != len(e.e)
 }
 
 func (e floatListElement) Less(elem Element) bool {
 	list := elem.FloatList()
 
-	if len(e.e) != len(list) {
+	if len(e.e) < len(list) {
+		return true
+	} else if len(e.e) > len(list) {
 		return false
 	}
 
 	for i := 0; i < len(e.e); i++ {
-		if e.e[i] < list[i] {
+		if e.e[i] >= list[i] {
 			return false
 		}
 	}
@@ -227,23 +302,9 @@ func (e floatListElement) Less(elem Element) bool {
 func (e floatListElement) LessEq(elem Element) bool {
 	list := elem.FloatList()
 
-	if len(e.e) != len(list) {
-		return false
-	}
-
-	for i := 0; i < len(e.e); i++ {
-		if e.e[i] <= list[i] {
-			return false
-		}
-	}
-
-	return true
-}
-
-func (e floatListElement) Greater(elem Element) bool {
-	list := elem.FloatList()
-
-	if len(e.e) != len(list) {
+	if len(e.e) < len(list) {
+		return true
+	} else if len(e.e) > len(list) {
 		return false
 	}
 
@@ -256,15 +317,35 @@ func (e floatListElement) Greater(elem Element) bool {
 	return true
 }
 
-func (e floatListElement) GreaterEq(elem Element) bool {
+func (e floatListElement) Greater(elem Element) bool {
 	list := elem.FloatList()
 
-	if len(e.e) != len(list) {
+	if len(e.e) > len(list) {
+		return true
+	} else if len(e.e) < len(list) {
 		return false
 	}
 
 	for i := 0; i < len(e.e); i++ {
-		if e.e[i] >= list[i] {
+		if e.e[i] <= list[i] {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (e floatListElement) GreaterEq(elem Element) bool {
+	list := elem.FloatList()
+
+	if len(e.e) > len(list) {
+		return true
+	} else if len(e.e) < len(list) {
+		return false
+	}
+
+	for i := 0; i < len(e.e); i++ {
+		if e.e[i] < list[i] {
 			return false
 		}
 	}

@@ -17,7 +17,84 @@ var _ Element = (*boolListElement)(nil)
 func (e *boolListElement) Set(value interface{}) {
 	e.nan = false
 	switch val := value.(type) {
+	case string:
+		e.e = make([]bool, 1)
+		if val == "NaN" {
+			e.nan = true
+			return
+		}
+		switch strings.ToLower(val) {
+		case "true", "t", "1":
+			e.e[0] = true
+		case "false", "f", "0":
+			e.e[0] = false
+		default:
+			e.nan = true
+			return
+		}
+	case int:
+		e.e = make([]bool, 1)
+		switch val {
+		case 1:
+			e.e[0] = true
+		case 0:
+			e.e[0] = false
+		default:
+			e.nan = true
+			return
+		}
+	case int32:
+		e.e = make([]bool, 1)
+		switch val {
+		case 1:
+			e.e[0] = true
+		case 0:
+			e.e[0] = false
+		default:
+			e.nan = true
+			return
+		}
+	case int64:
+		e.e = make([]bool, 1)
+		switch val {
+		case 1:
+			e.e[0] = true
+		case 0:
+			e.e[0] = false
+		default:
+			e.nan = true
+			return
+		}
+	case float32:
+		e.e = make([]bool, 1)
+		switch val {
+		case 1:
+			e.e[0] = true
+		case 0:
+			e.e[0] = false
+		default:
+			e.nan = true
+			return
+		}
+	case float64:
+		e.e = make([]bool, 1)
+		switch val {
+		case 1:
+			e.e[0] = true
+		case 0:
+			e.e[0] = false
+		default:
+			e.nan = true
+			return
+		}
+	case bool:
+		e.e = make([]bool, 1)
+		e.e[0] = val
 	case []string:
+		if val == nil {
+			e.nan = true
+			return
+		}
 		l := len(val)
 		e.e = make([]bool, l)
 		for i := 0; i < l; i++ {
@@ -36,6 +113,10 @@ func (e *boolListElement) Set(value interface{}) {
 			}
 		}
 	case []int:
+		if val == nil {
+			e.nan = true
+			return
+		}
 		l := len(val)
 		e.e = make([]bool, l)
 		for i := 0; i < l; i++ {
@@ -50,6 +131,10 @@ func (e *boolListElement) Set(value interface{}) {
 			}
 		}
 	case []int32:
+		if val == nil {
+			e.nan = true
+			return
+		}
 		l := len(val)
 		e.e = make([]bool, l)
 		for i := 0; i < l; i++ {
@@ -64,6 +149,10 @@ func (e *boolListElement) Set(value interface{}) {
 			}
 		}
 	case []int64:
+		if val == nil {
+			e.nan = true
+			return
+		}
 		l := len(val)
 		e.e = make([]bool, l)
 		for i := 0; i < l; i++ {
@@ -78,6 +167,10 @@ func (e *boolListElement) Set(value interface{}) {
 			}
 		}
 	case []float32:
+		if val == nil {
+			e.nan = true
+			return
+		}
 		l := len(val)
 		e.e = make([]bool, l)
 		for i := 0; i < l; i++ {
@@ -92,6 +185,10 @@ func (e *boolListElement) Set(value interface{}) {
 			}
 		}
 	case []float64:
+		if val == nil {
+			e.nan = true
+			return
+		}
 		l := len(val)
 		e.e = make([]bool, l)
 		for i := 0; i < l; i++ {
@@ -106,6 +203,10 @@ func (e *boolListElement) Set(value interface{}) {
 			}
 		}
 	case []bool:
+		if val == nil {
+			e.nan = true
+			return
+		}
 		l := len(val)
 		e.e = make([]bool, l)
 		for i := 0; i < l; i++ {
@@ -136,7 +237,7 @@ func (e boolListElement) IsNA() bool {
 }
 
 func (e boolListElement) Type() Type {
-	return IntList
+	return BoolList
 }
 
 func (e boolListElement) Val() ElementValue {
@@ -148,7 +249,7 @@ func (e boolListElement) Val() ElementValue {
 
 func (e boolListElement) String() string {
 	if e.IsNA() {
-		return "NaN"
+		return "[NaN]"
 	}
 	return fmt.Sprint(e.e)
 }
@@ -171,14 +272,19 @@ func (e boolListElement) Bool() (bool, error) {
 	if e.IsNA() {
 		return false, fmt.Errorf("can't convert NaN to bool")
 	}
-	return false, fmt.Errorf("can't convert []int to bool")
+	return false, fmt.Errorf("can't convert []bool to bool")
 }
 
 func (e boolListElement) StringList() []string {
 	if e.IsNA() {
 		return []string{"NaN"}
 	}
-	return []string{fmt.Sprint(e.e)}
+
+	l := make([]string, len(e.e))
+	for i := 0; i < len(e.e); i++ {
+		l[i] = fmt.Sprint(e.e[i])
+	}
+	return l
 }
 
 func (e boolListElement) IntList() ([]int, error) {
@@ -248,13 +354,14 @@ func (e boolListElement) Neq(elem Element) bool {
 		return false
 	}
 
+	count := 0
 	for i := 0; i < len(e.e); i++ {
 		if e.e[i] == list[i] {
-			return false
+			count = count + 1
 		}
 	}
 
-	return true
+	return count != len(e.e)
 }
 
 func (e boolListElement) Less(elem Element) bool {
@@ -263,12 +370,14 @@ func (e boolListElement) Less(elem Element) bool {
 		return false
 	}
 
-	if len(e.e) != len(list) {
+	if len(e.e) < len(list) {
+		return true
+	} else if len(e.e) > len(list) {
 		return false
 	}
 
 	for i := 0; i < len(e.e); i++ {
-		if !e.e[i] && list[i] {
+		if e.e[i] || !list[i] {
 			return false
 		}
 	}
@@ -282,12 +391,14 @@ func (e boolListElement) LessEq(elem Element) bool {
 		return false
 	}
 
-	if len(e.e) != len(list) {
+	if len(e.e) < len(list) {
+		return true
+	} else if len(e.e) > len(list) {
 		return false
 	}
 
 	for i := 0; i < len(e.e); i++ {
-		if !e.e[i] || list[i] {
+		if e.e[i] && !list[i] {
 			return false
 		}
 	}
@@ -301,12 +412,14 @@ func (e boolListElement) Greater(elem Element) bool {
 		return false
 	}
 
-	if len(e.e) != len(list) {
+	if len(e.e) > len(list) {
+		return true
+	} else if len(e.e) < len(list) {
 		return false
 	}
 
 	for i := 0; i < len(e.e); i++ {
-		if e.e[i] && !list[i] {
+		if !e.e[i] || list[i] {
 			return false
 		}
 	}
@@ -320,12 +433,14 @@ func (e boolListElement) GreaterEq(elem Element) bool {
 		return false
 	}
 
-	if len(e.e) != len(list) {
+	if len(e.e) > len(list) {
+		return true
+	} else if len(e.e) < len(list) {
 		return false
 	}
 
 	for i := 0; i < len(e.e); i++ {
-		if e.e[i] || !list[i] {
+		if !e.e[i] && list[i] {
 			return false
 		}
 	}

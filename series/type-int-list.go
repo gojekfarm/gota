@@ -17,7 +17,60 @@ var _ Element = (*intListElement)(nil)
 func (e *intListElement) Set(value interface{}) {
 	e.nan = false
 	switch val := value.(type) {
+	case string:
+		if val == "NaN" {
+			e.nan = true
+			return
+		}
+		i, err := strconv.Atoi(value.(string))
+		if err != nil {
+			e.nan = true
+			return
+		}
+		e.e = make([]int, 1)
+		e.e[0] = i
+	case int:
+		e.e = make([]int, 1)
+		e.e[0] = val
+	case int32:
+		e.e = make([]int, 1)
+		e.e[0] = int(val)
+	case int64:
+		e.e = make([]int, 1)
+		e.e[0] = int(val)
+	case float32:
+		f := val
+		if math.IsNaN(float64(f)) ||
+			math.IsInf(float64(f), 0) ||
+			math.IsInf(float64(f), 1) {
+			e.nan = true
+			return
+		}
+		e.e = make([]int, 1)
+		e.e[0] = int(f)
+	case float64:
+		f := val
+		if math.IsNaN(f) ||
+			math.IsInf(f, 0) ||
+			math.IsInf(f, 1) {
+			e.nan = true
+			return
+		}
+		e.e = make([]int, 1)
+		e.e[0] = int(f)
+	case bool:
+		e.e = make([]int, 1)
+		b := value.(bool)
+		if b {
+			e.e[0] = 1
+		} else {
+			e.e[0] = 0
+		}
 	case []string:
+		if val == nil {
+			e.nan = true
+			return
+		}
 		l := len(val)
 		e.e = make([]int, l)
 		for i := 0; i < l; i++ {
@@ -33,24 +86,40 @@ func (e *intListElement) Set(value interface{}) {
 			e.e[i] = vi
 		}
 	case []int:
+		if val == nil {
+			e.nan = true
+			return
+		}
 		l := len(val)
 		e.e = make([]int, l)
 		for i := 0; i < l; i++ {
 			e.e[i] = int(val[i])
 		}
 	case []int32:
+		if val == nil {
+			e.nan = true
+			return
+		}
 		l := len(val)
 		e.e = make([]int, l)
 		for i := 0; i < l; i++ {
 			e.e[i] = int(val[i])
 		}
 	case []int64:
+		if val == nil {
+			e.nan = true
+			return
+		}
 		l := len(val)
 		e.e = make([]int, l)
 		for i := 0; i < l; i++ {
 			e.e[i] = int(val[i])
 		}
 	case []float32:
+		if val == nil {
+			e.nan = true
+			return
+		}
 		l := len(val)
 		e.e = make([]int, l)
 		for i := 0; i < l; i++ {
@@ -64,6 +133,10 @@ func (e *intListElement) Set(value interface{}) {
 			e.e[i] = int(f)
 		}
 	case []float64:
+		if val == nil {
+			e.nan = true
+			return
+		}
 		l := len(val)
 		e.e = make([]int, l)
 		for i := 0; i < l; i++ {
@@ -77,6 +150,10 @@ func (e *intListElement) Set(value interface{}) {
 			e.e[i] = int(f)
 		}
 	case []bool:
+		if val == nil {
+			e.nan = true
+			return
+		}
 		l := len(val)
 		e.e = make([]int, l)
 		for i := 0; i < l; i++ {
@@ -124,20 +201,29 @@ func (e intListElement) Val() ElementValue {
 
 func (e intListElement) String() string {
 	if e.IsNA() {
-		return "NaN"
+		return "[NaN]"
 	}
 	return fmt.Sprint(e.e)
 }
 
 func (e intListElement) Int() (int, error) {
+	if e.IsNA() {
+		return 0, fmt.Errorf("can't convert NaN to int")
+	}
 	return 0, fmt.Errorf("can't convert []int to int")
 }
 
 func (e intListElement) Float() float64 {
+	if e.IsNA() {
+		return math.NaN()
+	}
 	return 0
 }
 
 func (e intListElement) Bool() (bool, error) {
+	if e.IsNA() {
+		return false, fmt.Errorf("can't convert NaN to bool")
+	}
 	return false, fmt.Errorf("can't convert []int to bool")
 }
 
@@ -188,6 +274,8 @@ func (e intListElement) BoolList() ([]bool, error) {
 	return l, nil
 }
 
+// For list element, it is considered to be equal when
+// all of its value on the same index is equal.
 func (e intListElement) Eq(elem Element) bool {
 	list, err := elem.IntList()
 	if err != nil {
@@ -214,16 +302,17 @@ func (e intListElement) Neq(elem Element) bool {
 	}
 
 	if len(e.e) != len(list) {
-		return false
+		return true
 	}
 
+	count := 0
 	for i := 0; i < len(e.e); i++ {
 		if e.e[i] == list[i] {
-			return false
+			count = count + 1
 		}
 	}
 
-	return true
+	return count != len(e.e)
 }
 
 func (e intListElement) Less(elem Element) bool {
@@ -232,12 +321,14 @@ func (e intListElement) Less(elem Element) bool {
 		return false
 	}
 
-	if len(e.e) != len(list) {
+	if len(e.e) < len(list) {
+		return true
+	} else if len(e.e) > len(list) {
 		return false
 	}
 
 	for i := 0; i < len(e.e); i++ {
-		if e.e[i] < list[i] {
+		if e.e[i] >= list[i] {
 			return false
 		}
 	}
@@ -251,12 +342,14 @@ func (e intListElement) LessEq(elem Element) bool {
 		return false
 	}
 
-	if len(e.e) != len(list) {
+	if len(e.e) < len(list) {
+		return true
+	} else if len(e.e) > len(list) {
 		return false
 	}
 
 	for i := 0; i < len(e.e); i++ {
-		if e.e[i] <= list[i] {
+		if e.e[i] > list[i] {
 			return false
 		}
 	}
@@ -270,12 +363,14 @@ func (e intListElement) Greater(elem Element) bool {
 		return false
 	}
 
-	if len(e.e) != len(list) {
+	if len(e.e) > len(list) {
+		return true
+	} else if len(e.e) < len(list) {
 		return false
 	}
 
 	for i := 0; i < len(e.e); i++ {
-		if e.e[i] > list[i] {
+		if e.e[i] <= list[i] {
 			return false
 		}
 	}
@@ -289,12 +384,14 @@ func (e intListElement) GreaterEq(elem Element) bool {
 		return false
 	}
 
-	if len(e.e) != len(list) {
+	if len(e.e) > len(list) {
+		return true
+	} else if len(e.e) < len(list) {
 		return false
 	}
 
 	for i := 0; i < len(e.e); i++ {
-		if e.e[i] >= list[i] {
+		if e.e[i] < list[i] {
 			return false
 		}
 	}

@@ -146,7 +146,7 @@ func (e stringElement) BoolList() ([]bool, error) {
 	case "true", "t", "1":
 		return []bool{true}, nil
 	case "false", "f", "0":
-		return []bool{true}, nil
+		return []bool{false}, nil
 	}
 	return nil, fmt.Errorf("can't convert String \"%v\" to []bool", e.e)
 }

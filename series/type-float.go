@@ -137,7 +137,7 @@ func (e floatElement) IntList() ([]int, error) {
 	if math.IsNaN(f) {
 		return nil, fmt.Errorf("can't convert NaN to []int")
 	}
-	return []int{int(f)}, fmt.Errorf("cant't convert float to []int")
+	return []int{int(f)}, nil
 }
 
 func (e floatElement) FloatList() []float64 {

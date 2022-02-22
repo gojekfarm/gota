@@ -18,7 +18,41 @@ var _ Element = (*stringListElement)(nil)
 func (e *stringListElement) Set(value interface{}) {
 	e.nan = false
 	switch val := value.(type) {
+	case string:
+		e.e = make([]string, 1)
+		e.e[0] = string(val)
+		if e.e[0] == "NaN" {
+			e.nan = true
+			return
+		}
+	case int:
+		e.e = make([]string, 1)
+		e.e[0] = strconv.Itoa(val)
+	case int32:
+		e.e = make([]string, 1)
+		e.e[0] = strconv.Itoa(int(val))
+	case int64:
+		e.e = make([]string, 1)
+		e.e[0] = strconv.FormatInt(val, 10)
+	case float32:
+		e.e = make([]string, 1)
+		e.e[0] = strconv.FormatFloat(float64(val), 'f', 6, 32)
+	case float64:
+		e.e = make([]string, 1)
+		e.e[0] = strconv.FormatFloat(val, 'f', 6, 64)
+	case bool:
+		e.e = make([]string, 1)
+		b := value.(bool)
+		if b {
+			e.e[0] = "true"
+		} else {
+			e.e[0] = "false"
+		}
 	case []string:
+		if val == nil {
+			e.nan = true
+			return
+		}
 		l := len(val)
 		e.e = make([]string, l)
 		for i := 0; i < l; i++ {
@@ -29,36 +63,60 @@ func (e *stringListElement) Set(value interface{}) {
 			}
 		}
 	case []int:
+		if val == nil {
+			e.nan = true
+			return
+		}
 		l := len(val)
 		e.e = make([]string, l)
 		for i := 0; i < l; i++ {
 			e.e[i] = strconv.Itoa(val[i])
 		}
 	case []int32:
+		if val == nil {
+			e.nan = true
+			return
+		}
 		l := len(val)
 		e.e = make([]string, l)
 		for i := 0; i < l; i++ {
 			e.e[i] = strconv.Itoa(int(val[i]))
 		}
 	case []int64:
+		if val == nil {
+			e.nan = true
+			return
+		}
 		l := len(val)
 		e.e = make([]string, l)
 		for i := 0; i < l; i++ {
 			e.e[i] = strconv.FormatInt(val[i], 10)
 		}
 	case []float32:
+		if val == nil {
+			e.nan = true
+			return
+		}
 		l := len(val)
 		e.e = make([]string, l)
 		for i := 0; i < l; i++ {
 			e.e[i] = strconv.FormatFloat(float64(val[i]), 'f', 6, 32)
 		}
 	case []float64:
+		if val == nil {
+			e.nan = true
+			return
+		}
 		l := len(val)
 		e.e = make([]string, l)
 		for i := 0; i < l; i++ {
 			e.e[i] = strconv.FormatFloat(val[i], 'f', 6, 64)
 		}
 	case []bool:
+		if val == nil {
+			e.nan = true
+			return
+		}
 		l := len(val)
 		e.e = make([]string, l)
 		for i := 0; i < l; i++ {
@@ -89,7 +147,7 @@ func (e stringListElement) IsNA() bool {
 }
 
 func (e stringListElement) Type() Type {
-	return IntList
+	return StringList
 }
 
 func (e stringListElement) Val() ElementValue {
@@ -101,21 +159,30 @@ func (e stringListElement) Val() ElementValue {
 
 func (e stringListElement) String() string {
 	if e.IsNA() {
-		return "NaN"
+		return "[NaN]"
 	}
 	return fmt.Sprint(e.e)
 }
 
 func (e stringListElement) Int() (int, error) {
-	return 0, fmt.Errorf("can't convert []int to int")
+	if e.IsNA() {
+		return 0, fmt.Errorf("can't convert NaN to int")
+	}
+	return 0, fmt.Errorf("can't convert []string to int")
 }
 
 func (e stringListElement) Float() float64 {
+	if e.IsNA() {
+		return math.NaN()
+	}
 	return 0
 }
 
 func (e stringListElement) Bool() (bool, error) {
-	return false, fmt.Errorf("can't convert []int to bool")
+	if e.IsNA() {
+		return false, fmt.Errorf("can't convert NaN to bool")
+	}
+	return false, fmt.Errorf("can't convert []string to bool")
 }
 
 func (e stringListElement) StringList() []string {
@@ -169,6 +236,8 @@ func (e stringListElement) BoolList() ([]bool, error) {
 			l[i] = true
 		case "false", "f", "0":
 			l[i] = false
+		default:
+			return nil, fmt.Errorf("can't convert String \"%v\" to bool", e.e)
 		}
 	}
 	return l, nil
@@ -197,24 +266,27 @@ func (e stringListElement) Neq(elem Element) bool {
 		return false
 	}
 
+	count := 0
 	for i := 0; i < len(e.e); i++ {
 		if e.e[i] == list[i] {
-			return false
+			count = count + 1
 		}
 	}
 
-	return true
+	return count != len(e.e)
 }
 
 func (e stringListElement) Less(elem Element) bool {
 	list := elem.StringList()
 
-	if len(e.e) != len(list) {
+	if len(e.e) < len(list) {
+		return true
+	} else if len(e.e) > len(list) {
 		return false
 	}
 
 	for i := 0; i < len(e.e); i++ {
-		if e.e[i] < list[i] {
+		if e.e[i] >= list[i] {
 			return false
 		}
 	}
@@ -225,23 +297,9 @@ func (e stringListElement) Less(elem Element) bool {
 func (e stringListElement) LessEq(elem Element) bool {
 	list := elem.StringList()
 
-	if len(e.e) != len(list) {
-		return false
-	}
-
-	for i := 0; i < len(e.e); i++ {
-		if e.e[i] <= list[i] {
-			return false
-		}
-	}
-
-	return true
-}
-
-func (e stringListElement) Greater(elem Element) bool {
-	list := elem.StringList()
-
-	if len(e.e) != len(list) {
+	if len(e.e) < len(list) {
+		return true
+	} else if len(e.e) > len(list) {
 		return false
 	}
 
@@ -254,15 +312,35 @@ func (e stringListElement) Greater(elem Element) bool {
 	return true
 }
 
-func (e stringListElement) GreaterEq(elem Element) bool {
+func (e stringListElement) Greater(elem Element) bool {
 	list := elem.StringList()
 
-	if len(e.e) != len(list) {
+	if len(e.e) > len(list) {
+		return true
+	} else if len(e.e) < len(list) {
 		return false
 	}
 
 	for i := 0; i < len(e.e); i++ {
-		if e.e[i] >= list[i] {
+		if e.e[i] <= list[i] {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (e stringListElement) GreaterEq(elem Element) bool {
+	list := elem.StringList()
+
+	if len(e.e) > len(list) {
+		return true
+	} else if len(e.e) < len(list) {
+		return false
+	}
+
+	for i := 0; i < len(e.e); i++ {
+		if e.e[i] < list[i] {
 			return false
 		}
 	}

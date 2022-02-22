@@ -139,7 +139,7 @@ func (e intElement) IntList() ([]int, error) {
 	if e.IsNA() {
 		return nil, fmt.Errorf("can't convert NaN to []int")
 	}
-	return []int{e.e}, fmt.Errorf("cant't convert int to []int")
+	return []int{e.e}, nil
 }
 
 func (e intElement) FloatList() []float64 {
