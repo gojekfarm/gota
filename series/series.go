@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/cespare/xxhash/v2"
 	"gonum.org/v1/gonum/stat"
 )
 
@@ -1111,7 +1112,10 @@ func (s Series) Slice(j, k int) Series {
 	return s.Subset(idxs)
 }
 
-// Flatten returns the flattened elements of series.
+// Flatten returns the flattened elements of series. If the series is list type (2D), it returns the standard type (1D).
+// Examples:
+// - Strings([]string{"A", "B", "C"}) -> Strings([]string{"A", "B", "C"})
+// - IntsList([][]int{{1, 11}, {3, 33}}) -> Ints([]int{1, 11, 3, 33})
 func (s Series) Flatten() Series {
 	switch s.Type() {
 	case StringList:
@@ -1151,15 +1155,18 @@ func (s Series) Flatten() Series {
 	}
 }
 
-// Unique:
+// Unique returns unique values based on a hash table.
+// Examples:
+// - Strings([]string{"A", "B", "C", "A", "B"}) -> Strings([]string{"A", "B", "C"})
+// - IntsList([][]int{{1, 11}, {3, 33}, {3, 33}}) -> IntsList([][]int{{1, 11}, {3, 33}})
 func (s Series) Unique() Series {
 	switch s.Type() {
 	case StringList:
 		l := s.elements.Len()
-		m := make(map[string]int, l)
+		m := make(map[uint64]int, l)
 		elements := [][]string{}
 		for i := 0; i < l; i++ {
-			key := fmt.Sprint(s.elements.Elem(i).StringList())
+			key := xxhash.Sum64String(strings.Join(s.elements.Elem(i).StringList(), ":"))
 			if _, ok := m[key]; ok {
 				continue
 			}
@@ -1170,7 +1177,7 @@ func (s Series) Unique() Series {
 		return New(elements, s.Type(), s.Name)
 	case IntList:
 		l := s.elements.Len()
-		m := make(map[string]int, l)
+		m := make(map[uint64]int, l)
 		elements := [][]int{}
 		for i := 0; i < l; i++ {
 			list, err := s.elements.Elem(i).IntList()
@@ -1178,7 +1185,12 @@ func (s Series) Unique() Series {
 				continue
 			}
 
-			key := fmt.Sprint(list)
+			h := xxhash.New()
+			for _, i := range list {
+				h.WriteString(fmt.Sprintf("%v:", i))
+			}
+			key := h.Sum64()
+
 			if _, ok := m[key]; ok {
 				continue
 			}
@@ -1189,10 +1201,17 @@ func (s Series) Unique() Series {
 		return New(elements, s.Type(), s.Name)
 	case FloatList:
 		l := s.elements.Len()
-		m := make(map[string]int, l)
+		m := make(map[uint64]int, l)
 		elements := [][]float64{}
 		for i := 0; i < l; i++ {
-			key := fmt.Sprint(s.elements.Elem(i).FloatList())
+			list := s.elements.Elem(i).FloatList()
+
+			h := xxhash.New()
+			for _, i := range list {
+				h.WriteString(fmt.Sprintf("%v:", i))
+			}
+			key := h.Sum64()
+
 			if _, ok := m[key]; ok {
 				continue
 			}
@@ -1203,7 +1222,7 @@ func (s Series) Unique() Series {
 		return New(elements, s.Type(), s.Name)
 	case BoolList:
 		l := s.elements.Len()
-		m := make(map[string]int, l)
+		m := make(map[uint64]int, l)
 		elements := [][]bool{}
 		for i := 0; i < l; i++ {
 			list, err := s.elements.Elem(i).BoolList()
@@ -1211,7 +1230,12 @@ func (s Series) Unique() Series {
 				continue
 			}
 
-			key := fmt.Sprint(list)
+			h := xxhash.New()
+			for _, i := range list {
+				h.WriteString(fmt.Sprintf("%v:", i))
+			}
+			key := h.Sum64()
+
 			if _, ok := m[key]; ok {
 				continue
 			}
@@ -1222,10 +1246,10 @@ func (s Series) Unique() Series {
 		return New(elements, s.Type(), s.Name)
 	default:
 		l := s.elements.Len()
-		m := make(map[string]int, l)
+		m := make(map[uint64]int, l)
 		elements := []interface{}{}
 		for i := 0; i < l; i++ {
-			key := fmt.Sprint(s.elements.Elem(i))
+			key := xxhash.Sum64String(fmt.Sprint(s.elements.Elem(i)))
 			if _, ok := m[key]; ok {
 				continue
 			}
