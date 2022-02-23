@@ -920,8 +920,8 @@ func (s Series) Mean() float64 {
 		s = s.Flatten()
 	}
 
-	stdDev := stat.Mean(s.Float(), nil)
-	return stdDev
+	mean := stat.Mean(s.Float(), nil)
+	return mean
 }
 
 // Median calculates the middle or median value, as opposed to

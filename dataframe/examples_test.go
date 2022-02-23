@@ -13,17 +13,34 @@ func ExampleNew() {
 		series.New([]string{"b", "a"}, series.String, "COL.1"),
 		series.New([]int{1, 2}, series.Int, "COL.2"),
 		series.New([]float64{3.0, 4.0}, series.Float, "COL.3"),
-		series.New([][]int{{1, 2}, {3, 4}}, series.IntList, "COL.4"),
+	)
+	fmt.Println(df)
+
+	// Output:
+	// [2x3] DataFrame
+	//
+	//     COL.1    COL.2 COL.3
+	//  0: b        1     3.000000
+	//  1: a        2     4.000000
+	//     <string> <int> <float>
+}
+
+func ExampleNew_ListTypes() {
+	df := dataframe.New(
+		series.New([][]string{{"B", "b"}, {"A", "a"}}, series.StringList, "COL.1"),
+		series.New([][]int{{1, 11}, {2, 22}}, series.IntList, "COL.2"),
+		series.New([][]float64{{3.0, 3.14}, {4.0, -16.64}}, series.FloatList, "COL.3"),
+		series.New([][]bool{{true, false}, {false, true}}, series.BoolList, "COL.4"),
 	)
 	fmt.Println(df)
 
 	// Output:
 	// [2x4] DataFrame
 	//
-	//     COL.1    COL.2 COL.3    COL.4
-	//  0: b        1     3.000000 [1 2]
-	//  1: a        2     4.000000 [3 4]
-	//     <string> <int> <float>  <int_list>
+	//     COL.1         COL.2      COL.3                 COL.4
+	//  0: [B b]         [1 11]     [3.000000 3.140000]   [true false]
+	//  1: [A a]         [2 22]     [4.000000 -16.640000] [false true]
+	//     <string_list> <int_list> <float_list>          <bool_list>
 }
 
 func ExampleLoadStructs() {
