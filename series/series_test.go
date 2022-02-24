@@ -1604,6 +1604,10 @@ func TestStrings(t *testing.T) {
 			Strings(Strings([]string{"A", "B", "C"})),
 			"[A B C]",
 		},
+		{
+			Strings([]interface{}{"A", "B", "C", "D", 1, 2, 3}),
+			"[A B C D 1 2 3]",
+		},
 	}
 	for testnum, test := range table {
 		if err := test.series.Err; err != nil {
@@ -1704,6 +1708,14 @@ func TestInts(t *testing.T) {
 			Ints(Ints([]string{"1", "2", "3"})),
 			"[1 2 3]",
 		},
+		{
+			Ints([]interface{}{"A", "B", "1", "2"}),
+			"[NaN NaN 1 2]",
+		},
+		{
+			Ints([]interface{}{1, 2, 3}),
+			"[1 2 3]",
+		},
 	}
 	for testnum, test := range table {
 		if err := test.series.Err; err != nil {
@@ -1799,6 +1811,14 @@ func TestFloats(t *testing.T) {
 		{
 			Floats(Strings([]string{"1", "2", "3"})),
 			"[1.000000 2.000000 3.000000]",
+		},
+		{
+			Floats([]interface{}{"A", "B", "1", "2"}),
+			"[NaN NaN 1.000000 2.000000]",
+		},
+		{
+			Floats([]interface{}{1.1, 2, 3}),
+			"[1.100000 2.000000 3.000000]",
 		},
 	}
 	for testnum, test := range table {
@@ -1896,6 +1916,14 @@ func TestBools(t *testing.T) {
 			Bools(Strings([]string{"1", "0", "1"})),
 			"[true false true]",
 		},
+		{
+			Bools([]interface{}{"A", "true", "1", "f"}),
+			"[NaN true true false]",
+		},
+		{
+			Bools([]interface{}{true, true, false}),
+			"[true true false]",
+		},
 	}
 	for testnum, test := range table {
 		if err := test.series.Err; err != nil {
@@ -1920,6 +1948,7 @@ func TestStringsList(t *testing.T) {
 		series   Series
 		expected string
 	}{
+		// Initialization using 1-D slice or single value.
 		{
 			StringsList([]string{"A", "B", "C", "D"}),
 			"[[A B C D]]",
@@ -2020,6 +2049,22 @@ func TestStringsList(t *testing.T) {
 			StringsList(StringsList([]string{"A", "B", "C"})),
 			"[[A B C]]",
 		},
+
+		// Initialization using 1-D slice of interface.
+		{
+			StringsList([]interface{}{"A", "B", "C", "D"}),
+			"[[A B C D]]",
+		},
+		{
+			StringsList([]interface{}{"A", "B", "C", "D", 1, 2, 3}),
+			"[[A B C D 1 2 3]]",
+		},
+		{
+			StringsList(StringsList([]interface{}{"A", "B", "C"})),
+			"[[A B C]]",
+		},
+
+		// Initialization using 2-D slice.
 		{
 			StringsList([][]string{{"A", "B"}, {"C", "D"}}),
 			"[[A B] [C D]]",
@@ -2088,6 +2133,24 @@ func TestStringsList(t *testing.T) {
 			StringsList(BoolsList([][]bool{{true}, {true, false}})),
 			"[[true] [true false]]",
 		},
+
+		// Initialization using 2-D slice of interface.
+		{
+			StringsList([][]interface{}{{"A", "B"}, {"C", "D"}}),
+			"[[A B] [C D]]",
+		},
+		{
+			StringsList([][]interface{}{{"A", "B"}, {"C", "D"}, {1, 2}}),
+			"[[A B] [C D] [1 2]]",
+		},
+		{
+			StringsList(StringsList([][]interface{}{{"A"}, {"B", "C"}})),
+			"[[A] [B C]]",
+		},
+		{
+			StringsList(StringsList([][]interface{}{{"A"}, {"B", "C"}, {1}, {2, 3}})),
+			"[[A] [B C] [1] [2 3]]",
+		},
 	}
 	for testnum, test := range table {
 		if err := test.series.Err; err != nil {
@@ -2112,6 +2175,7 @@ func TestIntsList(t *testing.T) {
 		series   Series
 		expected string
 	}{
+		// Initialization using 1-D slice or single value.
 		{
 			IntsList([]string{"A", "B", "1", "2"}),
 			"[[NaN]]",
@@ -2220,6 +2284,22 @@ func TestIntsList(t *testing.T) {
 			IntsList(IntsList([]string{"1", "2", "3"})),
 			"[[1 2 3]]",
 		},
+
+		// Initialization using 1-D slice of interface.
+		{
+			IntsList([]interface{}{"A", "B", "1", "2"}),
+			"[[NaN]]",
+		},
+		{
+			IntsList([]interface{}{1, 2, 3}),
+			"[[1 2 3]]",
+		},
+		{
+			IntsList(IntsList([]interface{}{"1", "2", "3", 4, 5})),
+			"[[1 2 3 4 5]]",
+		},
+
+		// Initialization using 2-D slice.
 		{
 			IntsList([][]string{{"A", "B"}, {"1", "2"}}),
 			"[[NaN] [1 2]]",
@@ -2300,6 +2380,20 @@ func TestIntsList(t *testing.T) {
 			IntsList(BoolsList([][]bool{{true}, {true, false}})),
 			"[[1] [1 0]]",
 		},
+
+		// Initialization using 2-D slice of interface.
+		{
+			IntsList([][]interface{}{{"A", "B"}, {"1", "2"}}),
+			"[[NaN] [1 2]]",
+		},
+		{
+			IntsList([][]interface{}{{"1"}, {"2", "3"}}),
+			"[[1] [2 3]]",
+		},
+		{
+			IntsList([][]interface{}{{1}, {2, 3}, {"4"}, {"5", "6"}}),
+			"[[1] [2 3] [4] [5 6]]",
+		},
 	}
 	for testnum, test := range table {
 		if err := test.series.Err; err != nil {
@@ -2324,6 +2418,7 @@ func TestFloatsList(t *testing.T) {
 		series   Series
 		expected string
 	}{
+		// Initialization using 1-D slice or single value.
 		{
 			FloatsList([]string{"A", "B", "1", "2"}),
 			"[[NaN]]",
@@ -2428,6 +2523,26 @@ func TestFloatsList(t *testing.T) {
 			FloatsList(FloatsList([]string{"1", "2", "3"})),
 			"[[1.000000 2.000000 3.000000]]",
 		},
+
+		// Initialization using 1-D slice of interface.
+		{
+			FloatsList([]interface{}{"A", "B", "1", "2"}),
+			"[[NaN]]",
+		},
+		{
+			FloatsList([]interface{}{"1"}),
+			"[[1.000000]]",
+		},
+		{
+			FloatsList([]interface{}{1.1, 2, 3}),
+			"[[1.100000 2.000000 3.000000]]",
+		},
+		{
+			FloatsList(FloatsList([]interface{}{"1", "2", "3"})),
+			"[[1.000000 2.000000 3.000000]]",
+		},
+
+		// Initialization using 2-D slice.
 		{
 			FloatsList([][]string{{"A", "B"}, {"1", "2"}}),
 			"[[NaN] [1.000000 2.000000]]",
@@ -2504,6 +2619,20 @@ func TestFloatsList(t *testing.T) {
 			FloatsList(BoolsList([][]bool{{true}, {true, false}})),
 			"[[1.000000] [1.000000 0.000000]]",
 		},
+
+		// Initialization using 2-D slice of interface.
+		{
+			FloatsList([][]interface{}{{"A", "B"}, {"1", "2"}}),
+			"[[NaN] [1.000000 2.000000]]",
+		},
+		{
+			FloatsList([][]interface{}{{1.1}, {2, 3}}),
+			"[[1.100000] [2.000000 3.000000]]",
+		},
+		{
+			FloatsList(FloatsList([][]interface{}{{1.1}, {2, 3}})),
+			"[[1.100000] [2.000000 3.000000]]",
+		},
 	}
 	for testnum, test := range table {
 		if err := test.series.Err; err != nil {
@@ -2528,6 +2657,7 @@ func TestBoolsList(t *testing.T) {
 		series   Series
 		expected string
 	}{
+		// Initialization using 1-D slice or single value.
 		{
 			BoolsList([]string{"A", "true", "1", "f"}),
 			"[[NaN]]",
@@ -2664,6 +2794,22 @@ func TestBoolsList(t *testing.T) {
 			BoolsList(Strings([]string{"1", "0", "1"})),
 			"[[true] [false] [true]]",
 		},
+
+		// Initialization using 1-D slice of interface.
+		{
+			BoolsList([]interface{}{"A", "true", "1", "f"}),
+			"[[NaN]]",
+		},
+		{
+			BoolsList([]interface{}{"t", 0, "true", 1}),
+			"[[true false true true]]",
+		},
+		{
+			BoolsList(Strings([]interface{}{"1", "0", "1"})),
+			"[[true] [false] [true]]",
+		},
+
+		// Initialization using 2-D slice.
 		{
 			BoolsList([][]string{{"A"}, {"NaN"}, {"true", "1", "f"}}),
 			"[[NaN] [NaN] [true true false]]",
@@ -2742,6 +2888,20 @@ func TestBoolsList(t *testing.T) {
 		},
 		{
 			BoolsList(BoolsList([][]bool{{true}, {false, true}})),
+			"[[true] [false true]]",
+		},
+
+		// Initialization using 2-D slice of interface.
+		{
+			BoolsList([][]interface{}{{"A"}, {"NaN"}, {"true", "1", "f"}}),
+			"[[NaN] [NaN] [true true false]]",
+		},
+		{
+			BoolsList([][]interface{}{{"t"}, {"false"}, {"true", 1, "f"}, {1, 0, 1}}),
+			"[[true] [false] [true true false] [true false true]]",
+		},
+		{
+			BoolsList(BoolsList([][]interface{}{{true}, {false, true}})),
 			"[[true] [false true]]",
 		},
 	}
@@ -5209,6 +5369,23 @@ func TestSeries_Flatten(t *testing.T) {
 		},
 		{
 			New([][]string{{"true", "t"}, {"ASD"}, {"false", "f"}}, BoolList, ""),
+			Bools([]bool{true, true, false, false}),
+		},
+
+		{
+			New([]interface{}{1, 2, 3, 4, 5, 6, 7, 8}, IntList, ""),
+			Ints([]int{1, 2, 3, 4, 5, 6, 7, 8}),
+		},
+		{
+			New([][]interface{}{{1, 2, 3, 4}, nil, {5, 6, 7, 8}}, IntList, ""),
+			Ints([]int{1, 2, 3, 4, 5, 6, 7, 8}),
+		},
+		{
+			New([][]interface{}{{"1"}, {"A"}, {"3"}}, IntList, ""),
+			Ints([]int{1, 3}),
+		},
+		{
+			New([][]interface{}{{"true", "t"}, {"ASD"}, {"false", "f"}}, BoolList, ""),
 			Bools([]bool{true, true, false, false}),
 		},
 	}

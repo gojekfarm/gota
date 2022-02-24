@@ -51,6 +51,7 @@ func TestDataFrame_Copy(t *testing.T) {
 		series.New([]string{"b", "a"}, series.String, "COL.1"),
 		series.New([]int{1, 2}, series.Int, "COL.2"),
 		series.New([]float64{3.0, 4.0}, series.Float, "COL.3"),
+		series.New([][]string{{"B", "b"}, {"A", "a"}}, series.StringList, "COL.4"),
 	)
 	b := a.Copy()
 
@@ -73,6 +74,7 @@ func TestDataFrame_Subset(t *testing.T) {
 		series.New([]string{"b", "a", "b", "c", "d"}, series.String, "COL.1"),
 		series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2"),
 		series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
+		series.New([][]string{{"B", "b"}, {"A", "a"}, {"D", "d"}, {"C", "c"}, {"E", "e"}}, series.StringList, "COL.4"),
 	)
 	table := []struct {
 		indexes interface{}
@@ -84,6 +86,7 @@ func TestDataFrame_Subset(t *testing.T) {
 				series.New([]string{"a", "b"}, series.String, "COL.1"),
 				series.New([]int{2, 4}, series.Int, "COL.2"),
 				series.New([]float64{4.0, 5.3}, series.Float, "COL.3"),
+				series.New([][]string{{"A", "a"}, {"D", "d"}}, series.StringList, "COL.4"),
 			),
 		},
 		{
@@ -92,6 +95,7 @@ func TestDataFrame_Subset(t *testing.T) {
 				series.New([]string{"a", "b"}, series.String, "COL.1"),
 				series.New([]int{2, 4}, series.Int, "COL.2"),
 				series.New([]float64{4.0, 5.3}, series.Float, "COL.3"),
+				series.New([][]string{{"A", "a"}, {"D", "d"}}, series.StringList, "COL.4"),
 			),
 		},
 		{
@@ -100,6 +104,7 @@ func TestDataFrame_Subset(t *testing.T) {
 				series.New([]string{"a", "b"}, series.String, "COL.1"),
 				series.New([]int{2, 4}, series.Int, "COL.2"),
 				series.New([]float64{4.0, 5.3}, series.Float, "COL.3"),
+				series.New([][]string{{"A", "a"}, {"D", "d"}}, series.StringList, "COL.4"),
 			),
 		},
 		{
@@ -108,6 +113,7 @@ func TestDataFrame_Subset(t *testing.T) {
 				series.New([]string{"b", "b", "a", "a", "b", "b", "c", "d"}, series.String, "COL.1"),
 				series.New([]int{1, 1, 2, 2, 4, 4, 5, 4}, series.Int, "COL.2"),
 				series.New([]float64{3.0, 3.0, 4.0, 4.0, 5.3, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
+				series.New([][]string{{"B", "b"}, {"B", "b"}, {"A", "a"}, {"A", "a"}, {"D", "d"}, {"D", "d"}, {"C", "c"}, {"E", "e"}}, series.StringList, "COL.4"),
 			),
 		},
 	}
@@ -141,37 +147,42 @@ func TestDataFrame_Select(t *testing.T) {
 		series.New([]string{"b", "a", "b", "c", "d"}, series.String, "COL.1"),
 		series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2"),
 		series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
+		series.New([][]string{{"B", "b"}, {"A", "a"}, {"D", "d"}, {"C", "c"}, {"E", "e"}}, series.StringList, "COL.4"),
 	)
 	table := []struct {
 		indexes interface{}
 		expDf   DataFrame
 	}{
 		{
-			series.Bools([]bool{false, true, true}),
+			series.Bools([]bool{false, true, true, true}),
 			New(
 				series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2"),
 				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
+				series.New([][]string{{"B", "b"}, {"A", "a"}, {"D", "d"}, {"C", "c"}, {"E", "e"}}, series.StringList, "COL.4"),
 			),
 		},
 		{
-			[]bool{false, true, true},
+			[]bool{false, true, true, true},
 			New(
 				series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2"),
 				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
+				series.New([][]string{{"B", "b"}, {"A", "a"}, {"D", "d"}, {"C", "c"}, {"E", "e"}}, series.StringList, "COL.4"),
 			),
 		},
 		{
-			series.Ints([]int{1, 2}),
+			series.Ints([]int{1, 2, 3}),
 			New(
 				series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2"),
 				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
+				series.New([][]string{{"B", "b"}, {"A", "a"}, {"D", "d"}, {"C", "c"}, {"E", "e"}}, series.StringList, "COL.4"),
 			),
 		},
 		{
-			[]int{1, 2},
+			[]int{1, 2, 3},
 			New(
 				series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2"),
 				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
+				series.New([][]string{{"B", "b"}, {"A", "a"}, {"D", "d"}, {"C", "c"}, {"E", "e"}}, series.StringList, "COL.4"),
 			),
 		},
 		{
@@ -187,8 +198,9 @@ func TestDataFrame_Select(t *testing.T) {
 			),
 		},
 		{
-			[]int{1, 2, 0},
+			[]int{3, 1, 2, 0},
 			New(
+				series.New([][]string{{"B", "b"}, {"A", "a"}, {"D", "d"}, {"C", "c"}, {"E", "e"}}, series.StringList, "COL.4"),
 				series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2"),
 				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
 				series.New([]string{"b", "a", "b", "c", "d"}, series.String, "COL.1"),
@@ -214,16 +226,18 @@ func TestDataFrame_Select(t *testing.T) {
 			),
 		},
 		{
-			[]string{"COL.3", "COL.1"},
+			[]string{"COL.3", "COL.4", "COL.1"},
 			New(
 				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
+				series.New([][]string{{"B", "b"}, {"A", "a"}, {"D", "d"}, {"C", "c"}, {"E", "e"}}, series.StringList, "COL.4"),
 				series.New([]string{"b", "a", "b", "c", "d"}, series.String, "COL.1"),
 			),
 		},
 		{
-			series.Strings([]string{"COL.3", "COL.1"}),
+			series.Strings([]string{"COL.3", "COL.4", "COL.1"}),
 			New(
 				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
+				series.New([][]string{{"B", "b"}, {"A", "a"}, {"D", "d"}, {"C", "c"}, {"E", "e"}}, series.StringList, "COL.4"),
 				series.New([]string{"b", "a", "b", "c", "d"}, series.String, "COL.1"),
 			),
 		},

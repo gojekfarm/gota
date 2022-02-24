@@ -268,6 +268,25 @@ func New(values interface{}, t Type, name string) Series {
 		for i := 0; i < l; i++ {
 			ret.elements.Elem(i).Set(v[i])
 		}
+	case []interface{}:
+		if strings.HasSuffix(string(t), "_list") {
+			preAlloc(1)
+			s := toStringArray(v)
+			ret.elements.Elem(0).Set(s)
+		} else {
+			l := len(v)
+			preAlloc(l)
+			for i := 0; i < l; i++ {
+				ret.elements.Elem(i).Set(v[i])
+			}
+		}
+	case [][]interface{}:
+		l := len(v)
+		preAlloc(l)
+		for i := 0; i < l; i++ {
+			s := toStringArray(v[i])
+			ret.elements.Elem(i).Set(s)
+		}
 	case Series:
 		l := v.Len()
 		preAlloc(l)
@@ -292,6 +311,15 @@ func New(values interface{}, t Type, name string) Series {
 		}
 	}
 	return ret
+}
+
+func toStringArray(v []interface{}) []string {
+	l := len(v)
+	s := make([]string, l)
+	for i := 0; i < l; i++ {
+		s[i] = fmt.Sprint(v[i])
+	}
+	return s
 }
 
 // Strings is a constructor for a String Series
