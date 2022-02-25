@@ -202,8 +202,12 @@ func New(values interface{}, t Type, name string) Series {
 	switch v := values.(type) {
 	case []string:
 		if strings.HasSuffix(string(t), "_list") {
-			preAlloc(1)
-			ret.elements.Elem(0).Set(v)
+			if len(v) > 0 {
+				preAlloc(1)
+				ret.elements.Elem(0).Set(v)
+			} else {
+				preAlloc(0)
+			}
 		} else {
 			l := len(v)
 			preAlloc(l)
@@ -219,8 +223,12 @@ func New(values interface{}, t Type, name string) Series {
 		}
 	case []float64:
 		if strings.HasSuffix(string(t), "_list") {
-			preAlloc(1)
-			ret.elements.Elem(0).Set(v)
+			if len(v) > 0 {
+				preAlloc(1)
+				ret.elements.Elem(0).Set(v)
+			} else {
+				preAlloc(0)
+			}
 		} else {
 			l := len(v)
 			preAlloc(l)
@@ -236,8 +244,12 @@ func New(values interface{}, t Type, name string) Series {
 		}
 	case []int:
 		if strings.HasSuffix(string(t), "_list") {
-			preAlloc(1)
-			ret.elements.Elem(0).Set(v)
+			if len(v) > 0 {
+				preAlloc(1)
+				ret.elements.Elem(0).Set(v)
+			} else {
+				preAlloc(0)
+			}
 		} else {
 			l := len(v)
 			preAlloc(l)
@@ -253,8 +265,12 @@ func New(values interface{}, t Type, name string) Series {
 		}
 	case []bool:
 		if strings.HasSuffix(string(t), "_list") {
-			preAlloc(1)
-			ret.elements.Elem(0).Set(v)
+			if len(v) > 0 {
+				preAlloc(1)
+				ret.elements.Elem(0).Set(v)
+			} else {
+				preAlloc(0)
+			}
 		} else {
 			l := len(v)
 			preAlloc(l)
@@ -270,20 +286,44 @@ func New(values interface{}, t Type, name string) Series {
 		}
 	case []interface{}:
 		if strings.HasSuffix(string(t), "_list") {
-			preAlloc(1)
-			s := toStringArray(v)
-			ret.elements.Elem(0).Set(s)
+			l := len(v)
+			preAlloc(l)
+			for i := 0; i < l; i++ {
+				if v[i] == nil {
+					ret.elements.Elem(i).Set(nil)
+					continue
+				}
+				switch reflect.TypeOf(v[i]).Kind() {
+				case reflect.Slice:
+					ret.elements.Elem(i).Set(v[i])
+				default:
+					ret.elements.Elem(i).Set(fmt.Sprint(v[i]))
+				}
+			}
 		} else {
 			l := len(v)
 			preAlloc(l)
 			for i := 0; i < l; i++ {
-				ret.elements.Elem(i).Set(v[i])
+				if v[i] == nil {
+					ret.elements.Elem(i).Set(nil)
+					continue
+				}
+				switch reflect.TypeOf(v[i]).Kind() {
+				case reflect.Slice:
+					ret.elements.Elem(i).Set(v[i])
+				default:
+					ret.elements.Elem(i).Set(v[i])
+				}
 			}
 		}
 	case [][]interface{}:
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
+			if v[i] == nil {
+				ret.elements.Elem(i).Set(nil)
+				continue
+			}
 			s := toStringArray(v[i])
 			ret.elements.Elem(i).Set(s)
 		}
@@ -317,6 +357,11 @@ func toStringArray(v []interface{}) []string {
 	l := len(v)
 	s := make([]string, l)
 	for i := 0; i < l; i++ {
+		if v[i] == nil {
+			s[i] = "NaN"
+			continue
+		}
+
 		s[i] = fmt.Sprint(v[i])
 	}
 	return s
