@@ -1609,10 +1609,14 @@ func TestDataFrame_InnerJoin(t *testing.T) {
 		},
 	)
 	table := []struct {
-		keys  []string
-		expDf DataFrame
+		leftDataframe  DataFrame
+		rightDataFrame DataFrame
+		keys           []string
+		expDf          DataFrame
 	}{
 		{
+			a,
+			b,
 			[]string{"A", "D"},
 			LoadRecords(
 				[][]string{
@@ -1622,6 +1626,8 @@ func TestDataFrame_InnerJoin(t *testing.T) {
 			),
 		},
 		{
+			a,
+			b,
 			[]string{"A"},
 			LoadRecords(
 				[][]string{
@@ -1633,6 +1639,8 @@ func TestDataFrame_InnerJoin(t *testing.T) {
 			),
 		},
 		{
+			a,
+			b,
 			[]string{"D"},
 			LoadRecords(
 				[][]string{
@@ -1648,9 +1656,69 @@ func TestDataFrame_InnerJoin(t *testing.T) {
 				},
 			),
 		},
+		{
+			New(
+				series.New([]int{1000000000, 800000000, 900000000}, series.Int, "A"),
+				series.New([]float64{1234567.89, 2345678.12, 34567890.34}, series.Float, "B"),
+				series.New([]string{"1000", "1010.15", "1020.20"}, series.String, "C"),
+			),
+			New(
+				series.New([]string{"1234567.89", "0", "34567890.34"}, series.String, "B"),
+				series.New([]float64{1.0, 2.0, 3.0}, series.Float, "D"),
+				series.New([]int{1000, 1010, 1020}, series.Int, "F"),
+			),
+			[]string{"B"},
+			New(
+				series.New([]float64{1234567.89, 34567890.34}, series.Float, "B"),
+				series.New([]int{1000000000, 900000000}, series.Int, "A"),
+				series.New([]string{"1000", "1020.20"}, series.String, "C"),
+				series.New([]interface{}{1.0, 3.0}, series.Float, "D"),
+				series.New([]interface{}{1000, 1020}, series.Int, "F"),
+			),
+		},
+		{
+			New(
+				series.New([]string{"1234567.89", "0", "34567890.34"}, series.String, "B"),
+				series.New([]int{1000000000, 800000000, 900000000}, series.Int, "A"),
+				series.New([]string{"1000", "1010.15", "1020.20"}, series.String, "C"),
+			),
+			New(
+				series.New([]float64{1234567.89, 2345678.12, 34567890.34}, series.Float, "B"),
+				series.New([]float64{1.0, 2.0, 3.0}, series.Float, "D"),
+				series.New([]int{1000, 1010, 1020}, series.Int, "F"),
+			),
+			[]string{"B"},
+			New(
+				series.New([]string{"1234567.89", "34567890.34"}, series.String, "B"),
+				series.New([]int{1000000000, 900000000}, series.Int, "A"),
+				series.New([]string{"1000", "1020.20"}, series.String, "C"),
+				series.New([]interface{}{1.0, 3.0}, series.Float, "D"),
+				series.New([]interface{}{1000, 1020}, series.Int, "F"),
+			),
+		},
+		{
+			New(
+				series.New([]float64{1234567.8900000, 0, 34567890.3400000}, series.Float, "B"),
+				series.New([]int{1000000000, 800000000, 900000000}, series.Int, "A"),
+				series.New([]string{"1000", "1010.15", "1020.20"}, series.String, "C"),
+			),
+			New(
+				series.New([]float64{1234567.89, 2345678.12, 34567890.34}, series.Float, "B"),
+				series.New([]float64{1.0, 2.0, 3.0}, series.Float, "D"),
+				series.New([]int{1000, 1010, 1020}, series.Int, "F"),
+			),
+			[]string{"B"},
+			New(
+				series.New([]float64{1234567.8900000, 34567890.3400000}, series.Float, "B"),
+				series.New([]int{1000000000, 900000000}, series.Int, "A"),
+				series.New([]string{"1000", "1020.20"}, series.String, "C"),
+				series.New([]interface{}{1.0, 3.0}, series.Float, "D"),
+				series.New([]interface{}{1000, 1020}, series.Int, "F"),
+			),
+		},
 	}
 	for i, tc := range table {
-		c := a.InnerJoin(b, tc.keys...)
+		c := tc.leftDataframe.InnerJoin(tc.rightDataFrame, tc.keys...)
 
 		if err := c.Err; err != nil {
 			t.Errorf("Test: %d\nError:%v", i, b.Err)
@@ -1693,11 +1761,16 @@ func TestDataFrame_LeftJoin(t *testing.T) {
 		DetectTypes(false),
 		DefaultType(series.Float),
 	)
+
 	table := []struct {
-		keys  []string
-		expDf DataFrame
+		leftDataframe  DataFrame
+		rightDataFrame DataFrame
+		keys           []string
+		expDf          DataFrame
 	}{
 		{
+			a,
+			b,
 			[]string{"A", "D"},
 			LoadRecords(
 				[][]string{
@@ -1712,6 +1785,8 @@ func TestDataFrame_LeftJoin(t *testing.T) {
 			),
 		},
 		{
+			a,
+			b,
 			[]string{"A"},
 			LoadRecords(
 				[][]string{
@@ -1725,9 +1800,69 @@ func TestDataFrame_LeftJoin(t *testing.T) {
 				DefaultType(series.Float),
 			),
 		},
+		{
+			New(
+				series.New([]int{1000000000, 800000000, 900000000}, series.Int, "A"),
+				series.New([]float64{1234567.89, 2345678.12, 34567890.34}, series.Float, "B"),
+				series.New([]string{"1000", "1010.15", "1020.20"}, series.String, "C"),
+			),
+			New(
+				series.New([]string{"1234567.89", "0", "34567890.34"}, series.String, "B"),
+				series.New([]float64{1.0, 2.0, 3.0}, series.Float, "D"),
+				series.New([]int{1000, 1010, 1020}, series.Int, "F"),
+			),
+			[]string{"B"},
+			New(
+				series.New([]float64{1234567.89, 2345678.12, 34567890.34}, series.Float, "B"),
+				series.New([]int{1000000000, 800000000, 900000000}, series.Int, "A"),
+				series.New([]string{"1000", "1010.15", "1020.20"}, series.String, "C"),
+				series.New([]interface{}{1.0, nil, 3.0}, series.Float, "D"),
+				series.New([]interface{}{1000, nil, 1020}, series.Int, "F"),
+			),
+		},
+		{
+			New(
+				series.New([]string{"1234567.89", "0", "34567890.34"}, series.String, "B"),
+				series.New([]int{1000000000, 800000000, 900000000}, series.Int, "A"),
+				series.New([]string{"1000", "1010.15", "1020.20"}, series.String, "C"),
+			),
+			New(
+				series.New([]float64{1234567.89, 2345678.12, 34567890.34}, series.Float, "B"),
+				series.New([]float64{1.0, 2.0, 3.0}, series.Float, "D"),
+				series.New([]int{1000, 1010, 1020}, series.Int, "F"),
+			),
+			[]string{"B"},
+			New(
+				series.New([]string{"1234567.89", "0", "34567890.34"}, series.String, "B"),
+				series.New([]int{1000000000, 800000000, 900000000}, series.Int, "A"),
+				series.New([]string{"1000", "1010.15", "1020.20"}, series.String, "C"),
+				series.New([]interface{}{1.0, nil, 3.0}, series.Float, "D"),
+				series.New([]interface{}{1000, nil, 1020}, series.Int, "F"),
+			),
+		},
+		{
+			New(
+				series.New([]float64{1234567.8900000, 0, 34567890.3400000}, series.Float, "B"),
+				series.New([]int{1000000000, 800000000, 900000000}, series.Int, "A"),
+				series.New([]string{"1000", "1010.15", "1020.20"}, series.String, "C"),
+			),
+			New(
+				series.New([]float64{1234567.89, 2345678.12, 34567890.34}, series.Float, "B"),
+				series.New([]float64{1.0, 2.0, 3.0}, series.Float, "D"),
+				series.New([]int{1000, 1010, 1020}, series.Int, "F"),
+			),
+			[]string{"B"},
+			New(
+				series.New([]float64{1234567.8900000, 0, 34567890.3400000}, series.Float, "B"),
+				series.New([]int{1000000000, 800000000, 900000000}, series.Int, "A"),
+				series.New([]string{"1000", "1010.15", "1020.20"}, series.String, "C"),
+				series.New([]interface{}{1.0, nil, 3.0}, series.Float, "D"),
+				series.New([]interface{}{1000, nil, 1020}, series.Int, "F"),
+			),
+		},
 	}
 	for i, tc := range table {
-		c := a.LeftJoin(b, tc.keys...)
+		c := tc.leftDataframe.LeftJoin(tc.rightDataFrame, tc.keys...)
 
 		if err := c.Err; err != nil {
 			t.Errorf("Test: %d\nError:%v", i, b.Err)

@@ -1695,7 +1695,7 @@ func (df DataFrame) createRowKey(keys []string, keyIdx []int, rowIdx int) string
 
 func createValueKey(val series.Element) string {
 	if val.Type() == series.Float {
-		return fmt.Sprintf("%g", val.Float())
+		return strconv.FormatFloat(val.Float(), 'f', -1, 64)
 	}
 	return val.String()
 }
@@ -1766,6 +1766,7 @@ func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 	aCols := df.columns
 	bCols := b.columns
 	bRowIdxLookup := b.createRowIdxLookup(keys, iKeysB)
+	fmt.Println("B row ID Look up ", bRowIdxLookup)
 	numCols := len(iKeysA) + len(iNotKeysA) + len(iNotKeysB)
 	updatedColRows := make(map[int][]series.Element, numCols)
 	for i := 0; i < numCols; i++ {
@@ -1775,6 +1776,7 @@ func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 	// Fill newCols
 	for i := 0; i < df.nrows; i++ {
 		rowKey := df.createRowKey(keys, iKeysA, i)
+		fmt.Println("A rowKey ", rowKey)
 		bMatchedRowIdxs := bRowIdxLookup[rowKey]
 		if len(bMatchedRowIdxs) == 0 {
 			ii := 0
