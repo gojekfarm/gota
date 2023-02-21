@@ -1982,7 +1982,7 @@ func TestDataFrame_LeftJoin(t *testing.T) {
 		},
 		{
 			New(
-				series.New([]interface{}{"1234567.89", "0", nil}, series.String, "B"),
+				series.New([]interface{}{1234567.89, 0, nil}, series.Float, "B"),
 				series.New([]int{1000000000, 800000000, 900000000}, series.Int, "A"),
 				series.New([]string{"1000", "1010.15", "1020.20"}, series.String, "C"),
 			),
@@ -1993,7 +1993,7 @@ func TestDataFrame_LeftJoin(t *testing.T) {
 			),
 			[]string{"B"},
 			New(
-				series.New([]interface{}{"1234567.89", "0", nil}, series.String, "B"),
+				series.New([]interface{}{1234567.89, 0, nil}, series.Float, "B"),
 				series.New([]int{1000000000, 800000000, 900000000}, series.Int, "A"),
 				series.New([]string{"1000", "1010.15", "1020.20"}, series.String, "C"),
 				series.New([]interface{}{1.0, nil, nil}, series.Float, "D"),

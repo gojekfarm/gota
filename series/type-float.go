@@ -46,8 +46,10 @@ func (e *floatElement) Set(value interface{}) {
 			e.e = 0
 		}
 	case Element:
-		e.e = val.Float()
 		e.nan = val.IsNA()
+		if !e.nan {
+			e.e = val.Float()
+		}
 	default:
 		e.nan = true
 		return
