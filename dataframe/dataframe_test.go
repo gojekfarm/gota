@@ -1659,6 +1659,46 @@ func TestDataFrame_InnerJoin(t *testing.T) {
 		{
 			New(
 				series.New([]int{1000000000, 800000000, 900000000}, series.Int, "A"),
+				series.New([]float64{1234567, 2345678, 34567890}, series.Float, "B"),
+				series.New([]string{"1000", "1010.15", "1020.20"}, series.String, "C"),
+			),
+			New(
+				series.New([]int{1234567, 0, 34567890}, series.Int, "B"),
+				series.New([]float64{1.0, 2.0, 3.0}, series.Float, "D"),
+				series.New([]int{1000, 1010, 1020}, series.Int, "F"),
+			),
+			[]string{"B"},
+			New(
+				series.New([]float64{1234567, 34567890}, series.Float, "B"),
+				series.New([]int{1000000000, 900000000}, series.Int, "A"),
+				series.New([]string{"1000", "1020.20"}, series.String, "C"),
+				series.New([]interface{}{1.0, 3.0}, series.Float, "D"),
+				series.New([]interface{}{1000, 1020}, series.Int, "F"),
+			),
+		},
+		{
+			New(
+				series.New([]int{1000000000, 800000000, 900000000}, series.Int, "A"),
+				series.New([]float64{1234567, 2345678, 34567890}, series.Int, "B"),
+				series.New([]string{"1000", "1010.15", "1020.20"}, series.String, "C"),
+			),
+			New(
+				series.New([]float64{1234567, 0, 34567890}, series.Float, "B"),
+				series.New([]float64{1.0, 2.0, 3.0}, series.Float, "D"),
+				series.New([]int{1000, 1010, 1020}, series.Int, "F"),
+			),
+			[]string{"B"},
+			New(
+				series.New([]int{1234567, 34567890}, series.Int, "B"),
+				series.New([]int{1000000000, 900000000}, series.Int, "A"),
+				series.New([]string{"1000", "1020.20"}, series.String, "C"),
+				series.New([]interface{}{1.0, 3.0}, series.Float, "D"),
+				series.New([]interface{}{1000, 1020}, series.Int, "F"),
+			),
+		},
+		{
+			New(
+				series.New([]int{1000000000, 800000000, 900000000}, series.Int, "A"),
 				series.New([]float64{1234567.89, 2345678.12, 34567890.34}, series.Float, "B"),
 				series.New([]string{"1000", "1010.15", "1020.20"}, series.String, "C"),
 			),
@@ -1798,6 +1838,46 @@ func TestDataFrame_LeftJoin(t *testing.T) {
 				},
 				DetectTypes(false),
 				DefaultType(series.Float),
+			),
+		},
+		{
+			New(
+				series.New([]int{1000000000, 800000000, 900000000}, series.Int, "A"),
+				series.New([]float64{1234567, 2345678, 34567890}, series.Float, "B"),
+				series.New([]string{"1000", "1010.15", "1020.20"}, series.String, "C"),
+			),
+			New(
+				series.New([]int{1234567, 0, 34567890}, series.Int, "B"),
+				series.New([]float64{1.0, 2.0, 3.0}, series.Float, "D"),
+				series.New([]int{1000, 1010, 1020}, series.Int, "F"),
+			),
+			[]string{"B"},
+			New(
+				series.New([]int{1234567, 2345678, 34567890}, series.Float, "B"),
+				series.New([]int{1000000000, 800000000, 900000000}, series.Int, "A"),
+				series.New([]string{"1000", "1010.15", "1020.20"}, series.String, "C"),
+				series.New([]interface{}{1.0, nil, 3.0}, series.Float, "D"),
+				series.New([]interface{}{1000, nil, 1020}, series.Int, "F"),
+			),
+		},
+		{
+			New(
+				series.New([]int{1000000000, 800000000, 900000000}, series.Int, "A"),
+				series.New([]int{1234567, 2345678, 34567890}, series.Int, "B"),
+				series.New([]string{"1000", "1010.15", "1020.20"}, series.String, "C"),
+			),
+			New(
+				series.New([]float64{1234567, 0, 34567890}, series.Float, "B"),
+				series.New([]float64{1.0, 2.0, 3.0}, series.Float, "D"),
+				series.New([]int{1000, 1010, 1020}, series.Int, "F"),
+			),
+			[]string{"B"},
+			New(
+				series.New([]int{1234567, 2345678, 34567890}, series.Int, "B"),
+				series.New([]int{1000000000, 800000000, 900000000}, series.Int, "A"),
+				series.New([]string{"1000", "1010.15", "1020.20"}, series.String, "C"),
+				series.New([]interface{}{1.0, nil, 3.0}, series.Float, "D"),
+				series.New([]interface{}{1000, nil, 1020}, series.Int, "F"),
 			),
 		},
 		{
@@ -2006,6 +2086,46 @@ func TestDataFrame_RightJoin(t *testing.T) {
 		{
 			New(
 				series.New([]int{1000000000, 800000000, 900000000}, series.Int, "A"),
+				series.New([]float64{1234567, 2345678, 34567890}, series.Float, "B"),
+				series.New([]string{"1000", "1010.15", "1020.20"}, series.String, "C"),
+			),
+			New(
+				series.New([]int{1234567, 0, 34567890}, series.Int, "B"),
+				series.New([]float64{1.0, 2.0, 3.0}, series.Float, "D"),
+				series.New([]int{1000, 1010, 1020}, series.Int, "F"),
+			),
+			[]string{"B"},
+			New(
+				series.New([]float64{1234567, 34567890, 0}, series.Float, "B"),
+				series.New([]interface{}{1000000000, 900000000, nil}, series.Int, "A"),
+				series.New([]interface{}{"1000", "1020.20", nil}, series.String, "C"),
+				series.New([]float64{1.0, 3.0, 2.0}, series.Float, "D"),
+				series.New([]int{1000, 1020, 1010}, series.Int, "F"),
+			),
+		},
+		{
+			New(
+				series.New([]int{1000000000, 800000000, 900000000}, series.Int, "A"),
+				series.New([]int{1234567, 2345678, 34567890}, series.Int, "B"),
+				series.New([]string{"1000", "1010.15", "1020.20"}, series.String, "C"),
+			),
+			New(
+				series.New([]float64{1234567, 0, 34567890}, series.Float, "B"),
+				series.New([]float64{1.0, 2.0, 3.0}, series.Float, "D"),
+				series.New([]int{1000, 1010, 1020}, series.Int, "F"),
+			),
+			[]string{"B"},
+			New(
+				series.New([]int{1234567, 34567890, 0}, series.Int, "B"),
+				series.New([]interface{}{1000000000, 900000000, nil}, series.Int, "A"),
+				series.New([]interface{}{"1000", "1020.20", nil}, series.String, "C"),
+				series.New([]float64{1.0, 3.0, 2.0}, series.Float, "D"),
+				series.New([]int{1000, 1020, 1010}, series.Int, "F"),
+			),
+		},
+		{
+			New(
+				series.New([]int{1000000000, 800000000, 900000000}, series.Int, "A"),
 				series.New([]float64{1234567.89, 2345678.12, 34567890.34}, series.Float, "B"),
 				series.New([]string{"1000", "1010.15", "1020.20"}, series.String, "C"),
 			),
@@ -2209,6 +2329,46 @@ func TestDataFrame_OuterJoin(t *testing.T) {
 				},
 				DetectTypes(false),
 				DefaultType(series.Float),
+			),
+		},
+		{
+			New(
+				series.New([]int{1000000000, 800000000, 900000000}, series.Int, "A"),
+				series.New([]float64{1234567, 2345678, 34567890}, series.Float, "B"),
+				series.New([]string{"1000", "1010.15", "1020.20"}, series.String, "C"),
+			),
+			New(
+				series.New([]int{1234567, 0, 34567890}, series.Int, "B"),
+				series.New([]float64{1.0, 2.0, 3.0}, series.Float, "D"),
+				series.New([]int{1000, 1010, 1020}, series.Int, "F"),
+			),
+			[]string{"B"},
+			New(
+				series.New([]float64{1234567, 2345678, 34567890, 0}, series.Float, "B"),
+				series.New([]interface{}{1000000000, 800000000, 900000000, nil}, series.Int, "A"),
+				series.New([]interface{}{"1000", "1010.15", "1020.20", nil}, series.String, "C"),
+				series.New([]interface{}{1.0, nil, 3.0, 2.0}, series.Float, "D"),
+				series.New([]interface{}{1000, nil, 1020, 1010}, series.Int, "F"),
+			),
+		},
+		{
+			New(
+				series.New([]int{1000000000, 800000000, 900000000}, series.Int, "A"),
+				series.New([]int{1234567, 2345678, 34567890}, series.Int, "B"),
+				series.New([]string{"1000", "1010.15", "1020.20"}, series.String, "C"),
+			),
+			New(
+				series.New([]float64{1234567, 0, 34567890}, series.Float, "B"),
+				series.New([]float64{1.0, 2.0, 3.0}, series.Float, "D"),
+				series.New([]int{1000, 1010, 1020}, series.Int, "F"),
+			),
+			[]string{"B"},
+			New(
+				series.New([]int{1234567, 2345678, 34567890, 0}, series.Int, "B"),
+				series.New([]interface{}{1000000000, 800000000, 900000000, nil}, series.Int, "A"),
+				series.New([]interface{}{"1000", "1010.15", "1020.20", nil}, series.String, "C"),
+				series.New([]interface{}{1.0, nil, 3.0, 2.0}, series.Float, "D"),
+				series.New([]interface{}{1000, nil, 1020, 1010}, series.Int, "F"),
 			),
 		},
 		{
