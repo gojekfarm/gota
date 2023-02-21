@@ -1688,6 +1688,9 @@ func (df DataFrame) createRowKey(keys []string, keyIdx []int, rowIdx int) string
 	cols := df.columns
 	for k := range keys {
 		val := cols[keyIdx[k]].Elem(rowIdx)
+		if val.IsNA() {
+			return invalidRowKey
+		}
 		sb.WriteString(createValueKey(val))
 	}
 	return sb.String()
@@ -1766,7 +1769,6 @@ func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 	aCols := df.columns
 	bCols := b.columns
 	bRowIdxLookup := b.createRowIdxLookup(keys, iKeysB)
-	fmt.Println("B row ID Look up ", bRowIdxLookup)
 	numCols := len(iKeysA) + len(iNotKeysA) + len(iNotKeysB)
 	updatedColRows := make(map[int][]series.Element, numCols)
 	for i := 0; i < numCols; i++ {
@@ -1776,7 +1778,6 @@ func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 	// Fill newCols
 	for i := 0; i < df.nrows; i++ {
 		rowKey := df.createRowKey(keys, iKeysA, i)
-		fmt.Println("A rowKey ", rowKey)
 		bMatchedRowIdxs := bRowIdxLookup[rowKey]
 		if len(bMatchedRowIdxs) == 0 {
 			ii := 0
@@ -1906,6 +1907,8 @@ type joinProperty struct {
 	newCols     []series.Series
 }
 
+const invalidRowKey = ""
+
 // OuterJoin returns a DataFrame containing the outer join of two DataFrames.
 func (df DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 	props, err := getJoinProperties(df, b, keys...)
@@ -1930,10 +1933,6 @@ func (df DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 	}
 	// Fill newCols
 	for i := 0; i < df.nrows; i++ {
-		// rowKey := ""
-		// for k := range keys {
-		// 	rowKey = rowKey + aCols[iKeysA[k]].Elem(i).String()
-		// }
 		rowKey := df.createRowKey(keys, iKeysA, i)
 		bMatchedRowIdxs := bRowIdxLookup[rowKey]
 		if len(bMatchedRowIdxs) == 0 {
@@ -2037,6 +2036,9 @@ func (df DataFrame) createRowIdxLookup(keys []string, keyIdx []int) map[string][
 	rowIdxLookup := make(map[string][]int, df.nrows)
 	for i := 0; i < df.nrows; i++ {
 		rowKey := df.createRowKey(keys, keyIdx, i)
+		if rowKey == invalidRowKey {
+			continue
+		}
 		rowIdxLookup[rowKey] = append(rowIdxLookup[rowKey], i)
 	}
 	return rowIdxLookup
